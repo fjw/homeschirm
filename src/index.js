@@ -23,15 +23,21 @@ try {
     }
   });
 
-
+  /*
   setInterval(() => {
     if(actData) {
-      console.log(new Date(), actData.issueTime);
+      console.log(
+          new Date().toLocaleString(),
+          "  -  ",
+          new Date(actData.issueTime).toLocaleString(),
+          "  -  ",
+          new Date(actData.updateTime).toLocaleString(),
+      );
     } else {
       console.log(".");
     }
   }, 10000);
-
+  */
 
 }
 

@@ -8,7 +8,7 @@ const { msToHumanReadable } = require('./tools');
 
 exports.update = async () => {
     let startime;
-    console.log('-- update -- ' + new Date() + ' --');
+    console.log('-- update -- ' + new Date().toLocaleString() + ' --');
 
     startime = Date.now();
     console.log('downloading mosmix.');
@@ -47,7 +47,7 @@ function parseKml() {
     return new Promise((resolve, reject) => {
 
         let d = {
-            loadTime: new Date()
+            updateTime: new Date().toISOString(),
         };
 
         const parser = new XmlParser();

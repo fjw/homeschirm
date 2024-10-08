@@ -25,6 +25,8 @@ exports.update = async () => {
     const data = await parseKml();
     console.log('     -> ' + msToHumanReadable(Date.now() - startime));
 
+    console.log('-- done --');
+
     return data;
 }
 

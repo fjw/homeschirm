@@ -3,3 +3,13 @@ exports.kmlTmpFile = '/tmp/mosmix.kml';
 exports.stationId = 'P830';
 exports.jsonTmpFile = '/tmp/mosmix.json';
 exports.updateCronTime = '46 * * * *';
+
+exports.displayColors = {
+    "white": "#fff",
+    "black": "#000",
+    "red": "#f00",
+    "green": "#0f0",
+    "blue": "#00f",
+    "yellow": "#ff0",
+    "orange": "#ff8000"
+};

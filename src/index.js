@@ -4,23 +4,20 @@ const fs = require('fs/promises');
 const {readFileSync} = require('fs');
 const {jsonTmpFile, updateCronTime} = require("./config");
 const {draw} = require("./lib/draw");
+const {prepareData} = require("./lib/prepareData");
 
-
-let actData;
+let actData = null;
 
 const updateNow = async () => {
-  const oldIssueTime = actData ? actData.issueTime : "never";
-  actData = await dwdForecast.update();
-
-  if(actData.issueTime !== oldIssueTime) {
-    await fs.writeFile(jsonTmpFile, JSON.stringify(actData));
-  }
+  actData = await prepareData(await dwdForecast.update(), actData);
+  await fs.writeFile(jsonTmpFile, JSON.stringify(actData));
 };
 
 const initialize = async () => {
   try {
 
     actData = JSON.parse(readFileSync(jsonTmpFile).toString());
+
     // if data is older than 1 hour on load, update now
     if((new Date() - new Date(actData.updateTime)) / 1000 / 60 / 60 > 1 ) { await updateNow(); }
 

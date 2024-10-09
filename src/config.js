@@ -13,3 +13,5 @@ exports.displayColors = {
     "yellow": "#ff0",
     "orange": "#ff8000"
 };
+
+exports.showDaysCount = 8;

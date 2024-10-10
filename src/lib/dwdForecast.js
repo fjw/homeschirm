@@ -37,11 +37,15 @@ async function downloadKmz() {
 }
 
 async function extractKMZ(kmz) {
-    const zip = new AdmZip(kmz);
-    const zipEntries = zip.getEntries();
-    const data = await getZipEntryData(zipEntries[0]);
+    try {
+        const zip = new AdmZip(kmz);
+        const zipEntries = zip.getEntries();
+        const data = await getZipEntryData(zipEntries[0]);
 
-    await fs.writeFile(kmlTmpFile, data);
+        await fs.writeFile(kmlTmpFile, data);
+    } catch (e) {
+        console.log(e);
+    }
 }
 
 

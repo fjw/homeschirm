@@ -1,5 +1,7 @@
 #todo: git / python etc
 
+mkdir data
+
 sudo apt update
 sudo apt install -y imagemagick python3-pip python3-pil python3-numpy
 

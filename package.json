@@ -6,7 +6,7 @@
     "node": ">=21.0.0"
   },
   "scripts": {
-    "dev": "NODE_ENV=development npx nodemon src/index.js",
+    "dev": "NODE_ENV=development npx nodemon --ignore data src/index.js",
     "start": "NODE_ENV=production node src/index.js"
   },
   "dependencies": {

@@ -136,7 +136,7 @@ exports.draw = async (data) => {
         , hours[0]);
 
         if(maxHour) {
-            const text = Math.floor(kelvinToCelsius(maxHour.forecast.TTT)) + "°C";
+            const text = Math.round(kelvinToCelsius(maxHour.forecast.TTT)) + "°C";
             const textOffset = ctx.measureText(text);
             ctx.fillText(
                 text,

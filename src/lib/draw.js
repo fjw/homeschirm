@@ -12,7 +12,7 @@ const {writeFileSync} = require("fs");
 const {displayColors, showDaysCount, pngTmpFile} = require("../config");
 const {resolve} = require("path");
 
-registerFont(resolve("SimpleBitIV.ttf"), { family: 'SimpleBitIV' });
+registerFont(resolve("MINERVA1.ttf"), { family: 'Minerva' });
 
 exports.draw = async (data) => {
 
@@ -27,7 +27,7 @@ exports.draw = async (data) => {
     ctx.fillStyle = displayColors.white;
     ctx.fillRect(0, 0, 800, 480);
 
-    ctx.font = '16px SimpleBitIV';
+    ctx.font = '16px Minerva';
     ctx.fillStyle = displayColors.orange;
     ctx.fillText("Hurra! Dies ist ein wünderbarer Text.", 100, 300);
 

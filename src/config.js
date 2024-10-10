@@ -1,5 +1,5 @@
 exports.mosmixEndpoint = "https://opendata.dwd.de/weather/local_forecasts/mos/MOSMIX_S/all_stations/kml/MOSMIX_S_LATEST_240.kmz";
-exports.stationId = '10865';//'P860'; //10865
+exports.stationId = 'P860'; //10865
 exports.updateCronTime = '46 * * * *';
 
 exports.kmlTmpFile = __dirname + '/../data/mosmix.kml';

@@ -1,3 +1,4 @@
+const {showDaysCount} = require("../config");
 
 exports.prepareData = async (newdata, data) => {
 
@@ -10,11 +11,13 @@ exports.prepareData = async (newdata, data) => {
     }
 
     // group old data by hour
-    const objectByHour = Object.groupBy( data.days,i => getIdFromDate(new Date(i.timeStep)) );
+    const objectByHour = {};
+    data.days.forEach(day => {
+        objectByHour[getIdFromDate(new Date(day.timeStep))] = day;
+    });
 
     // overwrite hour data with newdata, keep data from days/hours not included in current forecast
     newdata.timeSteps.forEach((timestep, i) => {
-        if (i>2) return null;
 
         const ts = new Date(timestep);
 
@@ -35,7 +38,7 @@ exports.prepareData = async (newdata, data) => {
     });
 
     // get next 8 days from issueTime (including issueTime)
-    const nextdays = Array.from({length: 8},
+    const nextdays = Array.from({length: showDaysCount},
         (v, i) => new Date(new Date(new Date(newdata.issueTime).setDate(new Date(newdata.issueTime).getDate() + i)).setHours(0,0,0,0))
     ).map(d => getDayIdFromDate(d));
 

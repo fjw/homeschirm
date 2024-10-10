@@ -19,8 +19,8 @@ const initialize = async () => {
 
     actData = JSON.parse(readFileSync(jsonTmpFile).toString());
 
-    // if data is older than 1 hour on load, update now
-    if((new Date() - new Date(actData.updateTime)) / 1000 / 60 / 60 > 1 ) { await updateNow(); }
+    // if data is older than 2 hour on load, update now
+    if((new Date() - new Date(actData.issueTime)) / 1000 / 60 / 60 > 2 ) { await updateNow(); }
 
   } catch (e) {
 
@@ -45,7 +45,7 @@ const initialize = async () => {
       await display();
     });
 
-    console.log("-- initialized -- " + new Date().toLocaleString() + " -- data from: " + new Date(actData.issueTime).toLocaleString() + " --");
+    console.log("-- initialized -- " + new Date().toLocaleString() + " -- issueTime: " + new Date(actData.issueTime).toLocaleString() + " --");
     await display();
 
     /*

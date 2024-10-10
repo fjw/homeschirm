@@ -2,8 +2,8 @@ exports.mosmixEndpoint = "https://opendata.dwd.de/weather/local_forecasts/mos/MO
 exports.stationId = 'P830';
 exports.updateCronTime = '46 * * * *';
 
-exports.kmlTmpFile = '/tmp/mosmix.kml';
-exports.jsonTmpFile = '/tmp/mosmix.json';
+exports.kmlTmpFile = __dirname + '/../data/mosmix.kml';
+exports.jsonTmpFile = __dirname + '/../data/mosmix.json';
 exports.pngTmpFile = __dirname + '/../data/screen.png';
 exports.bmpTmpFile = __dirname + '/../data/screen.bmp';
 

@@ -12,7 +12,7 @@ exports.convertToBmp = async () => {
 
 exports.pushToDisplay = async () => {
     try {
-        await cmd("python3", ["python_src/src/display_bitmap.py"]);
+        await cmd("python3", ["python_src/display_bitmap.py"]);
     } catch (e) {
         console.error(e);
     }

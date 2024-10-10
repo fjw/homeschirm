@@ -31,8 +31,10 @@ const initialize = async () => {
 
     const display = async () => {
       await draw(actData);
+      console.log("converting to BMP.");
       await convertToBmp();
       if(process.env["NODE_ENV"] !== "development") {
+        console.log("push to display...")
         await pushToDisplay();
       }
     };
@@ -42,6 +44,8 @@ const initialize = async () => {
       await updateNow();
       await display();
     });
+
+    console.log(actData);
 
     console.log("-- initialized -- " + new Date().toLocaleString() + " -- data from: " + new Date(actData.issueTime).toLocaleString() + " --");
     await display();

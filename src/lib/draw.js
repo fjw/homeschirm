@@ -9,7 +9,7 @@ function l(obj) {
 
 const { createCanvas, registerFont } = require('canvas');
 const {writeFileSync} = require("fs");
-const {displayColors, showDaysCount} = require("../config");
+const {displayColors, showDaysCount, pngTmpFile} = require("../config");
 const {resolve} = require("path");
 
 registerFont(resolve("SimpleBitIV.ttf"), { family: 'SimpleBitIV' });
@@ -36,11 +36,28 @@ exports.draw = async (data) => {
     const tempHeight = 160;
     const tempYMargin = 10;
     const rainYMargin = 5;
-    const maxRain = 10; // kg/m^2
+    const maxRain = 5; // kg/m^2
+    const maxSun = 60*60; //SunD1 is in seconds per hour
     const minTemp = kelvinToCelsius(Math.min(...data.days.map(d => d.forecast.TTT).filter(v => v !== null)));
     const maxTemp = kelvinToCelsius(Math.max(...data.days.map(d => d.forecast.TTT).filter(v => v !== null)));
 
     const indexToDayX = i => margin + i * pxPerHour + pxPerHour / 2;
+
+    // sun
+    data.days.map(d => d.forecast.SunD1).forEach((rain, i) => {
+
+        let sunH = interpolatePixel(rain, 0, maxSun, 0, tempHeight - 2*rainYMargin);
+        let overflow = false;
+
+        ctx.fillStyle = displayColors.yellow;
+        ctx.fillRect(
+            indexToDayX(i),
+            margin + tempHeight - rainYMargin - sunH,
+            4,
+            sunH
+        );
+
+    });
 
     // rain
     data.days.map(d => d.forecast.RR1c).forEach((rain, i) => {
@@ -56,7 +73,7 @@ exports.draw = async (data) => {
         ctx.fillRect(
             indexToDayX(i) + 2,
             margin + tempHeight - rainYMargin - rainH,
-            1,
+            2,
             rainH
         );
 
@@ -82,16 +99,6 @@ exports.draw = async (data) => {
     ctx.beginPath();
     ctx.moveTo(margin, zeroY);
     ctx.lineTo(800-margin, zeroY);
-    ctx.stroke();
-
-
-    //todo tmp bounds
-    ctx.strokeStyle = displayColors.green;
-    ctx.beginPath();
-    ctx.moveTo(margin, margin + tempYMargin);
-    ctx.lineTo(800 - margin, margin + tempYMargin);
-    ctx.moveTo(margin, margin + tempHeight - tempYMargin );
-    ctx.lineTo(800 - margin, margin + tempHeight - tempYMargin);
     ctx.stroke();
 
     // draw temperature
@@ -151,7 +158,7 @@ exports.draw = async (data) => {
 
 
     const buf = cnv.toBuffer();
-    writeFileSync('waveshare/python/pic/test.png', buf);
+    writeFileSync(pngTmpFile, buf);
 
     console.log("done");
 }

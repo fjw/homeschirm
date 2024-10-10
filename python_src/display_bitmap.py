@@ -2,8 +2,8 @@
 # -*- coding:utf-8 -*-
 import sys
 import os
-picdir = os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), 'pic')
-libdir = os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), 'lib')
+picdir = os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), 'data')
+libdir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'lib')
 if os.path.exists(libdir):
     sys.path.append(libdir)
 
@@ -20,7 +20,7 @@ try:
 
     epd = epd7in3f.EPD()
     epd.init()
-    Himage = Image.open(os.path.join(picdir, '/tmp/screen.bmp'))
+    Himage = Image.open(os.path.join(picdir, 'screen.bmp'))
     epd.display(epd.getbuffer(Himage))
     epd.sleep()
 

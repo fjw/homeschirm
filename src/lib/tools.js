@@ -28,3 +28,39 @@ exports.msToHumanReadable = ms => {
     if (d || h || m) t = t + m + "m ";
     return t + s + "s";
 }
+
+
+/**
+ * Runs a shell command in a sub process and returns {stdout, stderr}
+ *
+ * @param {string} command command to execute in the shell
+ * @param {*} options options as array of string
+ * @returns {Promise<{cmd: array, error: *}|{cmd: array, stdout: string, stderr: string}>}
+ */
+exports.cmd = (command, options) => {
+    const {spawn} = require("child_process");
+
+    return new Promise((resolve, reject) => {
+
+        const cmdcall = [command, ...options];
+        const ls = spawn(command, options);
+
+        let stdout = "";
+        let stderr = "";
+
+        ls.stdout.on('data', data => stdout += data);
+        ls.stderr.on('data', data => stderr += data);
+
+        ls.on('error', error => {
+            reject({cmd: cmdcall, error});
+        });
+
+        ls.on('close', code => {
+            if(!code) {
+                resolve({stdout, stderr, cmd: cmdcall});
+            } else {
+                reject({cmd: cmdcall, error: stdout+stderr});
+            }
+        });
+    });
+}

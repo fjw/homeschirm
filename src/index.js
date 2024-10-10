@@ -5,6 +5,7 @@ const {readFileSync} = require('fs');
 const {jsonTmpFile, updateCronTime} = require("./config");
 const {draw} = require("./lib/draw");
 const {prepareData} = require("./lib/prepareData");
+const {convertToBmp, pushToDisplay} = require("./lib/finalize");
 
 let actData = null;
 
@@ -28,9 +29,22 @@ const initialize = async () => {
 
   } finally {
 
-    // setup cron update
-    cron.schedule(updateCronTime, async () => { await updateNow(); });
+    const display = async () => {
+      await draw(actData);
+      await convertToBmp();
+      if(process.env["NODE_ENV"] !== "development") {
+        await pushToDisplay();
+      }
+    };
 
+    // setup cron update
+    cron.schedule(updateCronTime, async () => {
+      await updateNow();
+      await display();
+    });
+
+    console.log("-- initialized -- " + new Date().toLocaleString() + " -- data from: " + new Date(actData.issueTime).toLocaleString() + " --");
+    await display();
 
     /*
     setInterval(() => {
@@ -53,9 +67,9 @@ const initialize = async () => {
 };
 
 initialize().then(async actData => {
-  console.log("-- initialized -- " + new Date().toLocaleString() + " -- data from: " + new Date(actData.issueTime).toLocaleString() + " --");
+  //console.log("-- initialized -- " + new Date().toLocaleString() + " -- data from: " + new Date(actData.issueTime).toLocaleString() + " --");
 
-  await draw(actData);
+
 });
 
 /*

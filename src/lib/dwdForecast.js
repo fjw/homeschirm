@@ -3,31 +3,35 @@ const { createReadStream } = require('fs');
 const { mosmixEndpoint, kmlTmpFile, stationId, kmzTmpFile} = require('../config');
 const AdmZip = require("adm-zip");
 const XmlParser = require('node-xml-stream');
-const { msToHumanReadable } = require('./tools');
+const { msToHumanReadable, cmd } = require('./tools');
 
 
 exports.update = async () => {
-    let startime;
-    console.log('-- update -- ' + new Date().toLocaleString() + ' --');
+    try {
+        let startime;
+        console.log('-- update -- ' + new Date().toLocaleString() + ' --');
 
-    startime = Date.now();
-    console.log('downloading mosmix.');
-    const kmz = await downloadKmz();
-    console.log('     -> ' + msToHumanReadable(Date.now() - startime));
+        startime = Date.now();
+        console.log('downloading mosmix.');
+        const kmz = await downloadKmz();
+        console.log('     -> ' + msToHumanReadable(Date.now() - startime));
 
-    startime = Date.now();
-    console.log('extracting.');
-    await extractKMZ(kmz);
-    console.log('     -> ' + msToHumanReadable(Date.now() - startime));
+        startime = Date.now();
+        console.log('extracting.');
+        await extractKMZ(kmz);
+        console.log('     -> ' + msToHumanReadable(Date.now() - startime));
 
-    startime = Date.now();
-    console.log('parsing.');
-    const data = await parseKml();
-    console.log('     -> ' + msToHumanReadable(Date.now() - startime));
+        startime = Date.now();
+        console.log('parsing.');
+        const data = await parseKml();
+        console.log('     -> ' + msToHumanReadable(Date.now() - startime));
 
-    console.log('-- done --');
+        console.log('-- done --');
 
-    return data;
+        return data;
+    } catch (e) {
+        console.error(e);
+    }
 }
 
 async function downloadKmz() {
@@ -41,11 +45,7 @@ async function downloadKmz() {
 }
 
 async function extractKMZ() {
-    const zip = new AdmZip(kmzTmpFile);
-    const zipEntries = zip.getEntries();
-    const data = await getZipEntryData(zipEntries[0]);
-
-    await fs.writeFile(kmlTmpFile, data);
+    await cmd("src/lib/unzipKml.sh", []);
 }
 
 

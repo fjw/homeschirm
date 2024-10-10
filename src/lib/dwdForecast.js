@@ -1,6 +1,6 @@
 const fs = require('fs/promises');
 const { createReadStream } = require('fs');
-const { mosmixEndpoint, kmlTmpFile, stationId } = require('../config');
+const { mosmixEndpoint, kmlTmpFile, stationId, kmzTmpFile} = require('../config');
 const AdmZip = require("adm-zip");
 const XmlParser = require('node-xml-stream');
 const { msToHumanReadable } = require('./tools');
@@ -31,21 +31,21 @@ exports.update = async () => {
 }
 
 async function downloadKmz() {
-    const response = await fetch(mosmixEndpoint,{ cache: 'no-store' });
-    const arrayBuffer = await response.arrayBuffer();
-    return Buffer.from(arrayBuffer);
+    const fs = require('fs');
+    const { Readable } = require('stream');
+    const { finished } = require('stream/promises');
+
+    const stream = fs.createWriteStream(kmzTmpFile);
+    const { body } = await fetch(mosmixEndpoint);
+    await finished(Readable.fromWeb(body).pipe(stream));
 }
 
-async function extractKMZ(kmz) {
-    try {
-        const zip = new AdmZip(kmz);
-        const zipEntries = zip.getEntries();
-        const data = await getZipEntryData(zipEntries[0]);
+async function extractKMZ() {
+    const zip = new AdmZip(kmzTmpFile);
+    const zipEntries = zip.getEntries();
+    const data = await getZipEntryData(zipEntries[0]);
 
-        await fs.writeFile(kmlTmpFile, data);
-    } catch (e) {
-        console.log(e);
-    }
+    await fs.writeFile(kmlTmpFile, data);
 }
 
 

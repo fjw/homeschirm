@@ -12,7 +12,7 @@ const {writeFileSync} = require("fs");
 const {displayColors, showDaysCount, pngTmpFile} = require("../config");
 const {resolve} = require("path");
 
-registerFont(resolve("MINERVA1.ttf"), { family: 'Minerva' });
+registerFont(resolve("MINERVA1.otf"), { family: 'Minerva' });
 
 exports.draw = async (data) => {
 

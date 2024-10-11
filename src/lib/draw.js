@@ -11,6 +11,7 @@ const { createCanvas, registerFont } = require('canvas');
 const {writeFileSync} = require("fs");
 const {displayColors, showDaysCount, pngTmpFile} = require("../config");
 const {resolve} = require("path");
+const suncalc = require('suncalc');
 
 registerFont(resolve("MINERVA1.otf"), { family: 'Minerva' });
 
@@ -31,6 +32,7 @@ exports.draw = async (data) => {
     ctx.fillStyle = displayColors.orange;
     ctx.fillText("Hurra! Dies ist ein wünderbarer Text.", 100, 300);
 
+    const firstTimeStep = new Date(data.days[0].timeStep);
     const pxPerHour = Math.floor(800/showDaysCount/24);
     const margin = (800 - showDaysCount * 24 * pxPerHour) / 2;
     const tempHeight = 160;
@@ -40,6 +42,41 @@ exports.draw = async (data) => {
     const maxSun = 60*60; //SunD1 is in seconds per hour
     const minTemp = kelvinToCelsius(Math.min(...data.days.map(d => d.forecast.TTT).filter(v => v !== null)));
     const maxTemp = kelvinToCelsius(Math.max(...data.days.map(d => d.forecast.TTT).filter(v => v !== null)));
+
+    // since all data is about the "last" hour etc everything is shifted by one hour
+    const dateToX = ts => margin + ((ts - firstTimeStep) / 1000 / 60 / 60 + 1) * pxPerHour;
+
+    const groupedPerDay = Object.groupBy(data.days, d => d.day);
+    const dayXs = Object.keys(groupedPerDay).map(k => new Date(new Date(k).setHours(12,0,0,0))).map(
+        d => {
+            const stimes = suncalc.getTimes(d, data.coords.lat, data.coords.lon, data.coords.h);
+            return [Math.round(dateToX(stimes.dawn)), Math.round(dateToX(stimes.nauticalDusk))];
+        }
+    );
+    console.log(dayXs);
+
+    console.log(data.coords);
+
+    //draw night
+    ctx.fillStyle = displayColors.black;
+    ctx.fillRect(margin, margin,showDaysCount * 24 * pxPerHour, tempHeight);
+
+    // draw days
+    ctx.fillStyle = displayColors.white;
+    dayXs.forEach(([x1, x2]) => {
+        ctx.fillRect(x1, margin, x2-x1, tempHeight);
+    });
+
+    const drawCirlce = (x, y, r) => {
+        ctx.fillStyle = displayColors.orange;
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, 2 * Math.PI);
+        ctx.fill();
+    }
+
+    const dddd = new Date("10-11-24 08:00");
+    console.log(dddd);
+    drawCirlce(dateToX(dddd), 10, 4);
 
     const indexToDayX = i => margin + i * pxPerHour + pxPerHour / 2;
 
@@ -162,6 +199,8 @@ exports.draw = async (data) => {
 
     console.log("done");
 }
+
+
 
 function kelvinToCelsius(k) {
     return k - 273.15;

@@ -75,6 +75,11 @@ exports.prepareData = async (newdata, data) => {
     return {
         issueTime: newdata.issueTime,
         updateTime: newdata.updateTime,
+        coords: {
+            lat: newdata.coordinates[1],
+            lon: newdata.coordinates[0],
+            h: newdata.coordinates[2],
+        },
         days: d
     };
 }

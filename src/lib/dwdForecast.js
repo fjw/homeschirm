@@ -1,9 +1,9 @@
-const fs = require('fs/promises');
-const { createReadStream } = require('fs');
+const { createReadStream, createWriteStream } = require('fs');
 const { mosmixEndpoint, kmlTmpFile, stationId, kmzTmpFile} = require('../config');
-const AdmZip = require("adm-zip");
 const XmlParser = require('node-xml-stream');
 const { msToHumanReadable, cmd } = require('./tools');
+const { Readable } = require('stream');
+const { finished } = require('stream/promises');
 
 
 exports.update = async () => {
@@ -35,11 +35,7 @@ exports.update = async () => {
 }
 
 async function downloadKmz() {
-    const fs = require('fs');
-    const { Readable } = require('stream');
-    const { finished } = require('stream/promises');
-
-    const stream = fs.createWriteStream(kmzTmpFile);
+    const stream = createWriteStream(kmzTmpFile);
     const { body } = await fetch(mosmixEndpoint);
     await finished(Readable.fromWeb(body).pipe(stream));
 }

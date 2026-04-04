@@ -1,220 +1,248 @@
-const util = require('util');
-
-//todo: remove
-function l(obj) {
-    console.log(util.inspect(obj, { showHidden: true, depth: null, colors: true, maxArrayLength: null }));
-}
-
-
-
 const { createCanvas, registerFont } = require('canvas');
-const {writeFileSync} = require("fs");
-const {displayColors, showDaysCount, pngTmpFile} = require("../config");
-const {resolve} = require("path");
+const { writeFileSync } = require('fs');
+const { displayColors, showDaysCount, pngTmpFile } = require('../config');
+const { resolve } = require('path');
 const suncalc = require('suncalc');
 
-registerFont(resolve("MINERVA1.otf"), { family: 'Minerva' });
+registerFont(resolve('MINERVA1.otf'), { family: 'Minerva' });
+registerFont(resolve('CozetteVector.ttf'), { family: 'Cozette' });
+
+const fontFamily = 'Cozette';
 
 exports.draw = async (data) => {
-
     const cnv = createCanvas(800, 480);
     const ctx = cnv.getContext('2d');
 
-    ctx.antialias = 'none'
-    ctx.quality = 'best'
+    ctx.antialias = 'none';
+    ctx.quality = 'best';
     ctx.textRendering = 'optimizeLegibility';
-    //ctx.translate(0.5, 0.5); todo
 
     ctx.fillStyle = displayColors.white;
     ctx.fillRect(0, 0, 800, 480);
 
-    ctx.font = '16px Minerva';
-    ctx.fillStyle = displayColors.orange;
-    ctx.fillText("Hurra! Dies ist ein wünderbarer Text.", 100, 300);
+    // Globale Skalen (gleich fuer beide Zeilen)
+    const allTemps = data.days
+        .filter(d => d.forecast.TTT !== null)
+        .map(d => kelvinToCelsius(d.forecast.TTT));
+    const minTemp = Math.min(...allTemps);
+    const maxTemp = Math.max(...allTemps);
+    const maxRain = 5;
 
-    const firstTimeStep = new Date(data.days[0].timeStep);
-    const pxPerHour = Math.floor(800/showDaysCount/24);
-    const margin = (800 - showDaysCount * 24 * pxPerHour) / 2;
-    const tempHeight = 160;
-    const dayHeight = 50;
-    const tempYMargin = 10;
-    const rainYMargin = 5;
-    const maxRain = 5; // kg/m^2
-    const minTemp = kelvinToCelsius(Math.min(...data.days.map(d => d.forecast.TTT).filter(v => v !== null)));
-    const maxTemp = kelvinToCelsius(Math.max(...data.days.map(d => d.forecast.TTT).filter(v => v !== null)));
+    // Layout-Berechnung
+    const rowGap = 18;
+    const restDaysCount = showDaysCount - 1;
 
-    // since all data is about the "last" hour etc everything is shifted by one hour
-    // +1h offset: MOSMIX hourly data refers to the preceding hour (e.g. RR1c at 12:00 = rain 11-12)
-    const dateToX = ts => margin + ((ts - firstTimeStep) / 1000 / 60 / 60 + 1) * pxPerHour;
-    // for point-in-time events (sunrise, sunset) the +1 offset does not apply
-    const dateToXPoint = ts => margin + ((ts - firstTimeStep) / 1000 / 60 / 60) * pxPerHour;
+    // Zeile 2 bestimmt die gemeinsame Breite (mehr Rundungsverlust)
+    const pxPerHour2 = Math.floor(800 / (24 * restDaysCount));
+    const row2DayWidth = pxPerHour2 * 24;
+    const contentWidth = row2DayWidth * restDaysCount;
+    const hMargin = Math.floor((800 - contentWidth) / 2);
 
+    // Zeile 1 nutzt dieselbe Breite
+    const pxPerHour1 = Math.floor(contentWidth / 24);
+    const row1DayWidth = pxPerHour1 * 24;
+
+    // Vertikaler Rand = horizontaler Rand
+    const vMargin = hMargin;
+
+    // Gleiche Seitenverhaeltnisse: row1Height/row1DayWidth = row2Height/row2DayWidth
+    const availableHeight = 480 - vMargin * 2 - rowGap;
+    const ratio = row2DayWidth / row1DayWidth;
+    const row1Height = Math.floor(availableHeight / (1 + ratio));
+    const row2Height = Math.floor(availableHeight * ratio / (1 + ratio));
+
+    // Daten nach Tag aufteilen
     const groupedPerDay = Object.groupBy(data.days, d => d.day);
+    const dayKeys = Object.keys(groupedPerDay);
+
+    // Zeile 1: erster Tag (zentriert)
+    const row1Days = data.days.filter(d => d.day === dayKeys[0]);
+    const row1X = hMargin;
+    drawLine(ctx, data, row1Days, 1, row1X, vMargin, row1Height, pxPerHour1, minTemp, maxTemp, maxRain);
+
+    // Wochentag + Datum oben links
+    const weekdays = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'];
+    const months = ['Januar', 'Februar', 'Maerz', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
+    const firstDate = new Date(dayKeys[0]);
+    const dateLabel = `${weekdays[firstDate.getUTCDay()]}, ${firstDate.getUTCDate()}. ${months[firstDate.getUTCMonth()]}`;
+    ctx.font = `24px ${fontFamily}`;
+    const dateLabelWidth = ctx.measureText(dateLabel).width;
+    const dateLabelX = row1X + 8;
+    const dateLabelY = vMargin + 6;
+    ctx.fillStyle = displayColors.white;
+    ctx.fillRect(dateLabelX - 2, dateLabelY, dateLabelWidth + 4, 26);
+    ctx.fillStyle = displayColors.black;
+    ctx.fillText(dateLabel, dateLabelX, dateLabelY + 22);
+
+    // Zeile 2: restliche Tage (zentriert)
+    const row2DayKeySet = new Set(dayKeys.slice(1, showDaysCount));
+    const row2Days = data.days.filter(d => row2DayKeySet.has(d.day));
+    const row2TotalWidth = row2DayWidth * restDaysCount;
+    const row2X = hMargin;
+    const row2Y = vMargin + row1Height + rowGap;
+    drawLine(ctx, data, row2Days, restDaysCount, row2X, row2Y, row2Height, pxPerHour2, minTemp, maxTemp, maxRain);
+
+    writeFileSync(pngTmpFile, cnv.toBuffer());
+    console.log('done');
+};
+
+function drawLine(ctx, allData, dayHours, numDays, x, y, height, pxPerHour, minTemp, maxTemp, maxRain) {
+    const tempYMargin = Math.max(4, Math.round(height * 0.06));
+    const rainYMargin = Math.max(2, Math.round(height * 0.03));
+    const fontSize = 20;
+    const rainBarWidth = Math.max(2, Math.round(pxPerHour * 0.45));
+    const outlineWidth = 3;
+
+    const firstTimeStep = new Date(dayHours[0].timeStep);
+    const indexToDayX = i => x + i * pxPerHour + pxPerHour / 2;
+
+    // Sonnenzeiten
+    const groupedPerDay = Object.groupBy(dayHours, d => d.day);
     const sunTimes = Object.keys(groupedPerDay).map(k => {
         const d = new Date(new Date(k).setHours(12, 0, 0, 0));
-        const times = suncalc.getTimes(d, data.coords.lat, data.coords.lon, data.coords.h);
+        const times = suncalc.getTimes(d, allData.coords.lat, allData.coords.lon, allData.coords.h);
         const hoursFromStart = ts => (ts - firstTimeStep) / 1000 / 60 / 60;
         return {
             day: k,
             sunrise: times.sunrise,
             sunset: times.sunset,
-            sunriseX: margin + Math.ceil(hoursFromStart(times.sunrise)) * pxPerHour,
-            sunsetX:  margin + Math.ceil(hoursFromStart(times.sunset))  * pxPerHour,
+            sunriseX: x + Math.ceil(hoursFromStart(times.sunrise)) * pxPerHour,
+            sunsetX:  x + Math.ceil(hoursFromStart(times.sunset))  * pxPerHour,
         };
     });
     const sunTimesByDay = Object.fromEntries(sunTimes.map(s => [s.day, s]));
 
-    const indexToDayX = i => margin + i * pxPerHour + pxPerHour / 2;
-
-    // cloud cover dithering – temperature background + bar below
-    const barY = tempHeight + margin + margin;
-    data.days.forEach((d, i) => {
+    // Bewoelkung Dithering
+    dayHours.forEach((d, i) => {
         const N = d.forecast.N ?? 50;
         const ts = new Date(d.timeStep);
         const sunT = sunTimesByDay[d.day];
         const isDay = sunT && ts >= sunT.sunrise && ts < sunT.sunset;
         const baseColor = isDay ? displayColors.yellow : displayColors.black;
-        const colX = margin + i * pxPerHour;
-        drawDitheredColumn(ctx, colX, margin, pxPerHour, tempHeight, N / 100, baseColor);
-        //drawDitheredColumn(ctx, colX, barY,    pxPerHour, dayHeight,  N / 100, baseColor);
+        const colX = x + i * pxPerHour;
+        drawDitheredColumn(ctx, colX, y, pxPerHour, height, N / 100, baseColor);
     });
 
-    // sunrise and sunset lines
+    // Sonnenauf-/untergangslinien
     ctx.fillStyle = displayColors.yellow;
     sunTimes.forEach(({ sunriseX, sunsetX }) => {
-        ctx.fillRect(sunriseX, margin, 1, tempHeight);
-        ctx.fillRect(sunsetX, margin, 1, tempHeight);
+        ctx.fillRect(sunriseX, y, 1, height);
+        ctx.fillRect(sunsetX, y, 1, height);
     });
 
-    // rain / snow / sleet / hail
-    data.days.forEach((d, i) => {
+    // Niederschlag
+    dayHours.forEach((d, i) => {
         const rain = d.forecast.RR1c;
         if (!rain || rain <= 0) return;
 
         const type = getPrecipType(d.forecast);
-
-        let rainH = interpolatePixel(rain, 0, maxRain, 0, tempHeight - 2*rainYMargin);
+        let rainH = interpolatePixel(rain, 0, maxRain, 0, height - 2 * rainYMargin);
         let overflow = false;
-        if (rainH > tempHeight - 2*rainYMargin) {
-            rainH = tempHeight - 2*rainYMargin;
+        if (rainH > height - 2 * rainYMargin) {
+            rainH = height - 2 * rainYMargin;
             overflow = true;
         }
 
-        const x = indexToDayX(i) + 1.5;
-        const y = margin + tempHeight - rainYMargin - rainH;
-        const w = 3;
+        const barX = indexToDayX(i) - rainBarWidth / 2;
+        const barY = y + height - rainYMargin - rainH;
 
         if (type === 'snow') {
             ctx.strokeStyle = displayColors.blue;
             ctx.lineWidth = 1;
-            ctx.strokeRect(x, y, w, rainH);
+            ctx.strokeRect(barX, barY, rainBarWidth, rainH);
         } else if (type === 'sleet') {
-            fillRectHatching(ctx, x, y, w, rainH, displayColors.blue, displayColors.white);
+            fillRectHatching(ctx, barX, barY, rainBarWidth, rainH, displayColors.blue, displayColors.white);
             ctx.strokeStyle = displayColors.blue;
             ctx.lineWidth = 1;
-            ctx.strokeRect(x, y, w, rainH);
+            ctx.strokeRect(barX, barY, rainBarWidth, rainH);
         } else if (type === 'hail') {
-            fillRectHatching(ctx, x, y, w, rainH, displayColors.black, displayColors.white);
+            fillRectHatching(ctx, barX, barY, rainBarWidth, rainH, displayColors.black, displayColors.white);
             ctx.strokeStyle = displayColors.blue;
             ctx.lineWidth = 1;
-            ctx.strokeRect(x, y, w, rainH);
+            ctx.strokeRect(barX, barY, rainBarWidth, rainH);
         } else {
             ctx.fillStyle = displayColors.blue;
-            ctx.fillRect(x, y, w, rainH);
+            ctx.fillRect(barX, barY, rainBarWidth, rainH);
         }
 
         if (overflow) {
             ctx.fillStyle = displayColors.orange;
-            ctx.fillRect(indexToDayX(i) + 1, margin + rainYMargin, 3, 2);
+            ctx.fillRect(barX, y + rainYMargin, rainBarWidth, 2);
         }
     });
 
-    // draw day separators
+    // Tagestrennlinien
     ctx.strokeStyle = displayColors.black;
     ctx.lineWidth = 1;
-    for(let i = 1; i < showDaysCount; i++) {
-        //draw line
+    for (let i = 1; i < numDays; i++) {
         ctx.beginPath();
-        ctx.moveTo(margin + i * 24 * pxPerHour, margin);
-        ctx.lineTo(margin + i * 24 * pxPerHour, margin+tempHeight);
+        ctx.moveTo(x + i * 24 * pxPerHour, y);
+        ctx.lineTo(x + i * 24 * pxPerHour, y + height);
         ctx.stroke();
     }
 
-    // draw zero line
-    const zeroY = interpolatePixel(0, minTemp, maxTemp, margin + tempHeight - tempYMargin, margin + tempYMargin);
-    if(zeroY > margin && zeroY < tempHeight + margin + margin) {
+    // Nulllinie
+    const zeroY = interpolatePixel(0, minTemp, maxTemp, y + height - tempYMargin, y + tempYMargin);
+    if (zeroY > y && zeroY < y + height) {
+        ctx.strokeStyle = displayColors.black;
+        ctx.lineWidth = 1;
         ctx.beginPath();
-        ctx.moveTo(margin, zeroY);
-        ctx.lineTo(800 - margin, zeroY);
+        ctx.moveTo(x, zeroY);
+        ctx.lineTo(x + numDays * 24 * pxPerHour, zeroY);
         ctx.stroke();
     }
 
-    // draw temperature
+    // Temperaturkurve
     ctx.strokeStyle = displayColors.red;
     ctx.lineWidth = 2;
-    drawCurveThroughPoints(ctx, data.days.map(d => d.forecast.TTT).map((temp, i) =>
-        (temp === null) ? null : { x:indexToDayX(i), y:interpolatePixel(kelvinToCelsius(temp), minTemp, maxTemp, margin + tempHeight - tempYMargin, margin + tempYMargin)}
-    ).filter(v => v !== null));
+    const points = dayHours.map((d, i) => {
+        if (d.forecast.TTT === null) return null;
+        return {
+            x: indexToDayX(i),
+            y: interpolatePixel(kelvinToCelsius(d.forecast.TTT), minTemp, maxTemp, y + height - tempYMargin, y + tempYMargin)
+        };
+    }).filter(v => v !== null);
+    if (points.length > 2) drawCurveThroughPoints(ctx, points);
 
-    // write temp min/max
-    const perday = Object.groupBy(data.days, d => d.day);
-    Object.keys(perday).forEach(key => {
+    // Min/Max Temperaturbeschriftungen pro Tag
+    ctx.font = `${fontSize}px ${fontFamily}`;
+    const labelBelow = Math.max(8, Math.round(height * 0.05));
+    const labelAbove = Math.max(2, Math.round(height * 0.01));
 
-        const hours = perday[key].filter(h => h.forecast.TTT !== null);
+    Object.keys(groupedPerDay).forEach(key => {
+        const hours = groupedPerDay[key].filter(h => h.forecast.TTT !== null);
+        if (!hours.length) return;
 
-        // get hour with min temp
-        const minHour = hours.reduce(
-            (min, hour) => (hour.forecast.TTT < min.forecast.TTT) ? hour : min
-        , hours[0]);
+        const minHour = hours.reduce((min, h) => h.forecast.TTT < min.forecast.TTT ? h : min, hours[0]);
+        const maxHour = hours.reduce((max, h) => h.forecast.TTT > max.forecast.TTT ? h : max, hours[0]);
 
-        if(minHour) {
-            const text = Math.floor(kelvinToCelsius(minHour.forecast.TTT)) + "°C";
-            const textOffset = ctx.measureText(text);
+        if (minHour) {
+            const text = Math.floor(kelvinToCelsius(minHour.forecast.TTT)) + '°C';
+            const tw = ctx.measureText(text).width;
+            const idx = dayHours.indexOf(minHour);
             fillTextOutlined(ctx, text,
-                Math.floor(indexToDayX(data.days.indexOf(minHour)) - textOffset.width / 2),
-                Math.floor(interpolatePixel(kelvinToCelsius(minHour.forecast.TTT), minTemp, maxTemp, margin + tempHeight - tempYMargin, margin + tempYMargin) + 20),
-                displayColors.red, displayColors.white
+                Math.floor(indexToDayX(idx) - tw / 2),
+                Math.floor(interpolatePixel(kelvinToCelsius(minHour.forecast.TTT), minTemp, maxTemp, y + height - tempYMargin, y + tempYMargin) + labelBelow),
+                displayColors.red, displayColors.white, outlineWidth
             );
         }
 
-        // get hour with max temp
-        const maxHour = hours.reduce(
-            (max, hour) => (hour.forecast.TTT > max.forecast.TTT) ? hour : max
-        , hours[0]);
-
-        if(maxHour) {
-            const text = Math.round(kelvinToCelsius(maxHour.forecast.TTT)) + "°C";
-            const textOffset = ctx.measureText(text);
+        if (maxHour) {
+            const text = Math.round(kelvinToCelsius(maxHour.forecast.TTT)) + '°C';
+            const tw = ctx.measureText(text).width;
+            const idx = dayHours.indexOf(maxHour);
             fillTextOutlined(ctx, text,
-                Math.floor(indexToDayX(data.days.indexOf(maxHour)) - textOffset.width / 2),
-                Math.floor(interpolatePixel(kelvinToCelsius(maxHour.forecast.TTT), minTemp, maxTemp, margin + tempHeight - tempYMargin, margin + tempYMargin) - 4),
-                displayColors.red, displayColors.white
+                Math.floor(indexToDayX(idx) - tw / 2),
+                Math.floor(interpolatePixel(kelvinToCelsius(maxHour.forecast.TTT), minTemp, maxTemp, y + height - tempYMargin, y + tempYMargin) - labelAbove),
+                displayColors.red, displayColors.white, outlineWidth
             );
         }
-
     });
-
-
-
-
-
-
-    //l(data.days.map(d => d.forecast.TTT));
-
-    //l(data.days.map(d => d.day + " " + d.hour + " --  " + d.forecast.TTT + " --- " + new Date(d.issueTime).toLocaleString()));
-
-
-    const buf = cnv.toBuffer();
-    writeFileSync(pngTmpFile, buf);
-
-    console.log("done");
 }
 
-
-
-function fillTextOutlined(ctx, text, x, y, fillColor, outlineColor) {
+function fillTextOutlined(ctx, text, x, y, fillColor, outlineColor, strokeWidth) {
     ctx.strokeStyle = outlineColor;
-    ctx.lineWidth = 3;
+    ctx.lineWidth = strokeWidth || 3;
     ctx.lineJoin = 'round';
     ctx.strokeText(text, x, y);
     ctx.fillStyle = fillColor;
@@ -258,14 +286,13 @@ function kelvinToCelsius(k) {
 }
 
 function interpolatePixel(value, minValue, maxValue, minPixel, maxPixel) {
-    // Berechnung des interpolierten Pixelwerts
     return minPixel + (value - minValue) * (maxPixel - minPixel) / (maxValue - minValue);
 }
 
 function drawCurveThroughPoints(ctx, points) {
     ctx.beginPath();
     ctx.moveTo(points[0].x, points[0].y);
-    const length = points.length - 2
+    const length = points.length - 2;
     for (let i = 1; i < length; i++) {
         const xc = (points[i].x + points[i + 1].x) / 2;
         const yc = (points[i].y + points[i + 1].y) / 2;
@@ -274,7 +301,6 @@ function drawCurveThroughPoints(ctx, points) {
     ctx.quadraticCurveTo(points[length].x, points[length].y, points[length + 1].x, points[length + 1].y);
     ctx.stroke();
 }
-
 
 function fillRectHatching(ctx, x, y, w, h, stripeColor, bgColor) {
     ctx.save();

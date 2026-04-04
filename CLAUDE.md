@@ -19,7 +19,7 @@ Lauft auf einem **Raspberry Pi** mit angeschlossenem Display.
 - **Runtime:** Node.js >= 21
 - **Wichtige Pakete:** `canvas`, `node-cron`, `node-xml-stream`, `suncalc`
 - **Python:** nur fur Display-Ausgabe (`python_src/display_bitmap.py`)
-- **Font:** Minerva (`MINERVA1.otf`)
+- **Fonts:** Cozette (`CozetteVector.ttf`), Minerva (`MINERVA1.otf`)
 
 ---
 
@@ -93,12 +93,16 @@ npm start
 
 ---
 
+## Regeln
+
+- **Code NICHT ausfuehren:** Claude fuehrt `npm run dev`, `npm start` o.ae. NICHT selbst aus. Der User testet selbst.
+
+---
+
 ## Bekannte Probleme / TODOs
 
-- **Bug `draw.js` Z.237:** `ctx.fillRect(...)` steht ausserhalb jeder Funktion – muss bereinigt werden
 - **`fillRectHatching()`** ist leer/nicht implementiert
 - **Test-Code** noch vorhanden: hardcoded Text "Hurra!", Testkreis mit fixem Datum (10-11-24)
-- **Debug-Funktion `l()`** in `draw.js` – todo: entfernen
 
 ---
 

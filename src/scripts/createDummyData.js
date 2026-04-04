@@ -56,7 +56,7 @@ const issueTime = new Date();
 issueTime.setMinutes(0, 0, 0);
 
 const startOfDay0 = new Date(issueTime);
-startOfDay0.setUTCHours(0, 0, 0, 0);
+startOfDay0.setHours(0, 0, 0, 0);
 
 function getDayId(date) {
     return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
@@ -72,7 +72,7 @@ for (let dayIndex = 0; dayIndex < showDaysCount; dayIndex++) {
     for (let h = 0; h < 24; h++) {
         const ts = new Date(startOfDay0);
         ts.setDate(ts.getDate() + dayIndex);
-        ts.setUTCHours(h, 0, 0, 0);
+        ts.setHours(h, 0, 0, 0);
 
         // Temperature: min at 2 UTC, max at 12 UTC
         const tempC = avg + amp * Math.cos((h - 12) * Math.PI / 12);

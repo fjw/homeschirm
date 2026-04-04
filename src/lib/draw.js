@@ -36,6 +36,7 @@ exports.draw = async (data) => {
     const pxPerHour = Math.floor(800/showDaysCount/24);
     const margin = (800 - showDaysCount * 24 * pxPerHour) / 2;
     const tempHeight = 160;
+    const dayHeight = 50;
     const tempYMargin = 10;
     const rainYMargin = 5;
     const maxRain = 5; // kg/m^2
@@ -59,12 +60,12 @@ exports.draw = async (data) => {
 
     //draw night
     ctx.fillStyle = displayColors.black;
-    ctx.fillRect(margin, margin,showDaysCount * 24 * pxPerHour, tempHeight);
+    ctx.fillRect(margin, tempHeight + margin + margin,showDaysCount * 24 * pxPerHour, dayHeight);
 
     // draw days
     ctx.fillStyle = displayColors.white;
     dayXs.forEach(([x1, x2]) => {
-        ctx.fillRect(x1, margin, x2-x1, tempHeight);
+        ctx.fillRect(x1, tempHeight + margin + margin, x2-x1, dayHeight);
     });
 
     const drawCirlce = (x, y, r) => {
@@ -83,13 +84,13 @@ exports.draw = async (data) => {
     // sun
     data.days.map(d => d.forecast.SunD1).forEach((rain, i) => {
 
-        let sunH = interpolatePixel(rain, 0, maxSun, 0, tempHeight - 2*rainYMargin);
+        let sunH = interpolatePixel(rain, 0, maxSun, 0, dayHeight);
         let overflow = false;
 
         ctx.fillStyle = displayColors.yellow;
         ctx.fillRect(
             indexToDayX(i),
-            margin + tempHeight - rainYMargin - sunH,
+            tempHeight + margin + margin + dayHeight - sunH,
             4,
             sunH
         );
@@ -133,10 +134,12 @@ exports.draw = async (data) => {
 
     // draw zero line
     const zeroY = interpolatePixel(0, minTemp, maxTemp, margin + tempHeight - tempYMargin, margin + tempYMargin);
-    ctx.beginPath();
-    ctx.moveTo(margin, zeroY);
-    ctx.lineTo(800-margin, zeroY);
-    ctx.stroke();
+    if(zeroY > margin && zeroY < tempHeight + margin + margin) {
+        ctx.beginPath();
+        ctx.moveTo(margin, zeroY);
+        ctx.lineTo(800 - margin, zeroY);
+        ctx.stroke();
+    }
 
     // draw temperature
     ctx.strokeStyle = displayColors.red;
@@ -223,3 +226,12 @@ function drawCurveThroughPoints(ctx, points) {
     ctx.quadraticCurveTo(points[length].x, points[length].y, points[length + 1].x, points[length + 1].y);
     ctx.stroke();
 }
+
+
+function fillRectHatching(ctx, x, y, w, h, d) {
+    // fill rect with diagonal stripes
+
+
+
+}
+ctx.fillRect(margin, tempHeight + margin + margin,showDaysCount * 24 * pxPerHour, dayHeight);

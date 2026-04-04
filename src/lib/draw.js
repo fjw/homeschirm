@@ -9,7 +9,7 @@ registerFont(resolve('CozetteVector.ttf'), { family: 'Cozette' });
 
 const fontFamily = 'Cozette';
 
-exports.draw = async (data) => {
+exports.draw = async (data, warnings = []) => {
     const cnv = createCanvas(800, 480);
     const ctx = cnv.getContext('2d');
 
@@ -74,6 +74,21 @@ exports.draw = async (data) => {
     ctx.fillStyle = displayColors.black;
     ctx.fillText(dateLabel, dateLabelX, dateLabelY + 22);
 
+    // Warnungen unter dem Datum
+    if (warnings.length > 0) {
+        ctx.font = `24px ${fontFamily}`;
+        let warningY = dateLabelY + 32;
+        for (const w of warnings) {
+            const warnText = `${w.headline || w.event}`;
+            const warnWidth = ctx.measureText(warnText).width;
+            ctx.fillStyle = displayColors.white;
+            ctx.fillRect(dateLabelX - 2, warningY, warnWidth + 4, 26);
+            ctx.fillStyle = displayColors.orange;
+            ctx.fillText(warnText, dateLabelX, warningY + 22);
+            warningY += 28;
+        }
+    }
+
     // Zeile 2: restliche Tage (zentriert)
     const row2DayKeySet = new Set(dayKeys.slice(1, showDaysCount));
     const row2Days = data.days.filter(d => row2DayKeySet.has(d.day));
@@ -91,7 +106,7 @@ function drawLine(ctx, allData, dayHours, numDays, x, y, height, pxPerHour, minT
     const rainYMargin = Math.max(2, Math.round(height * 0.03));
     const fontSize = 20;
     const rainBarWidth = Math.max(2, Math.round(pxPerHour * 0.45));
-    const outlineWidth = 3;
+    const outlineWidth = 6;
 
     const firstTimeStep = new Date(dayHours[0].timeStep);
     const indexToDayX = i => x + i * pxPerHour + pxPerHour / 2;

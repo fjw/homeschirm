@@ -37,9 +37,11 @@ exports.prepareData = async (newdata, data) => {
 
     });
 
-    // get next 8 days from issueTime (including issueTime)
+    // get next days from today (not issueTime, which may be yesterday)
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
     const nextdays = Array.from({length: showDaysCount},
-        (v, i) => new Date(new Date(new Date(newdata.issueTime).setDate(new Date(newdata.issueTime).getDate() + i)).setHours(0,0,0,0))
+        (v, i) => new Date(new Date(today).setDate(today.getDate() + i))
     ).map(d => getDayIdFromDate(d));
 
     // prepare empty forecast for fill in

@@ -122,3 +122,12 @@ fs.mkdirSync(path.dirname(outPath), { recursive: true });
 fs.writeFileSync(outPath, JSON.stringify(output));
 console.log(`Dummy data written to ${outPath}`);
 console.log(`${result.length} time steps, issueTime: ${issueTime.toISOString()}`);
+
+// Dummy-Warnungen
+const dummyWarnings = [
+    { event: 'STARKWIND', severity: 'Minor', headline: 'Amtliche Warnung vor STARKWIND', description: 'Böen bis 60 km/h', onset: issueTime.toISOString(), expires: null, areaDesc: 'Landkreis München' },
+    { event: 'FROST', severity: 'Moderate', headline: 'Amtliche Warnung vor FROST', description: 'Tiefstwerte bis -3°C', onset: issueTime.toISOString(), expires: null, areaDesc: 'Landkreis München' },
+];
+const warningsPath = path.join(__dirname, '../../data/warnings.json');
+fs.writeFileSync(warningsPath, JSON.stringify(dummyWarnings));
+console.log(`Dummy warnings written to ${warningsPath}`);

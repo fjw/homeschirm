@@ -6,6 +6,7 @@ const {jsonTmpFile, updateCronTime} = require("./config");
 const {draw} = require("./lib/draw");
 const {prepareData} = require("./lib/prepareData");
 const {convertToBmp, pushToDisplay} = require("./lib/finalize");
+const {fetchWarnings} = require("./lib/dwdWarnings");
 
 let actData = null;
 
@@ -30,7 +31,15 @@ const initialize = async () => {
   } finally {
 
     const display = async () => {
-      await draw(actData);
+      let warnings = [];
+      try {
+        if (process.env["NODE_ENV"] === "development") {
+          warnings = JSON.parse(readFileSync(jsonTmpFile.replace('mosmix.json', 'warnings.json')).toString());
+        } else {
+          warnings = await fetchWarnings(actData.coords.lat, actData.coords.lon);
+        }
+      } catch (e) { console.error('Warnungen:', e.message); }
+      await draw(actData, warnings);
       console.log("converting to BMP.");
       await convertToBmp();
       if(process.env["NODE_ENV"] !== "development") {

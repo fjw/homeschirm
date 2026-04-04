@@ -3,7 +3,7 @@
   <component name="WebServers">
     <option name="servers">
       <webServer id="340168b3-273c-4b4a-900b-c90874d6307f" name="homeschirm.local">
-        <fileTransfer rootFolder="/home/frederic/code/homeschirm" accessType="SFTP" host="homeschirm.local" port="22" sshConfigId="6dfd12db-835f-475d-a541-aeeeea1d30bd" sshConfig="frederic@homeschirm.local:22 key" keyPair="true">
+        <fileTransfer rootFolder="/home/frederic/homeschirm" accessType="SFTP" host="homeschirm.lan" port="22" sshConfigId="6dfd12db-835f-475d-a541-aeeeea1d30bd" sshConfig="frederic@homeschirm.lan:22 key" keyPair="true">
           <advancedOptions>
             <advancedOptions dataProtectionLevel="Private" keepAliveTimeout="0" passiveMode="true" shareSSLContext="true" />
           </advancedOptions>

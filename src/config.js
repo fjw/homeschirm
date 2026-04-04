@@ -18,4 +18,4 @@ exports.displayColors = {
     "orange": "#ff8000"
 };
 
-exports.showDaysCount = 8;
+exports.showDaysCount = 5;

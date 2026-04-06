@@ -80,7 +80,7 @@ exports.draw = async (data) => {
 
     // Wochentag + Datum oben links
     const weekdays = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'];
-    const months = ['Januar', 'Februar', 'Maerz', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
+    const months = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
     const firstDate = new Date(dayKeys[0]);
     const dateLabel = `${weekdays[firstDate.getUTCDay()]}, ${firstDate.getUTCDate()}. ${months[firstDate.getUTCMonth()]}`;
     ctx.font = `24px ${fontFamily}`;

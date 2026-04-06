@@ -12,6 +12,9 @@ const fontFamily = 'Spleen24';
 const fontFamilyMed = 'Spleen16';
 const fontFamilySmall = 'Spleen12';
 
+const celsius = k => k - 273.15;
+const msToHours = ms => ms / 3600000;
+
 exports.draw = async (data) => {
     const warnings = data.warnings || [];
     const observation = data.observation || null;
@@ -28,7 +31,7 @@ exports.draw = async (data) => {
     // Globale Skalen (gleich für beide Zeilen)
     const allTemps = data.days
         .filter(d => d.forecast.TTT !== null)
-        .map(d => kelvinToCelsius(d.forecast.TTT));
+        .map(d => celsius(d.forecast.TTT));
     const minTemp = Math.min(...allTemps);
     const maxTemp = Math.max(...allTemps);
     const maxRain = 15;
@@ -70,7 +73,7 @@ exports.draw = async (data) => {
     if (row1Days.length > 0) {
         const now = new Date();
         const firstTs = new Date(row1Days[0].timeStep);
-        const nowHour = Math.ceil((now - firstTs) / 3600000);
+        const nowHour = Math.ceil(msToHours(now - firstTs));
         if (nowHour >= 0 && nowHour < 24) {
             const nowX = row1X + nowHour * pxPerHour1 + Math.floor(pxPerHour1 / 2) - 1;
             ctx.fillStyle = displayColors.green;
@@ -171,7 +174,7 @@ function drawLine(ctx, allData, dayHours, numDays, x, y, height, pxPerHour, minT
     const sunTimes = Object.keys(groupedPerDay).map(k => {
         const d = new Date(new Date(k).setHours(12, 0, 0, 0));
         const times = suncalc.getTimes(d, allData.coords.lat, allData.coords.lon, allData.coords.h);
-        const hoursFromStart = ts => (ts - firstTimeStep) / 1000 / 60 / 60;
+        const hoursFromStart = ts => msToHours(ts - firstTimeStep);
         return {
             day: k,
             sunrise: times.sunrise,
@@ -189,8 +192,8 @@ function drawLine(ctx, allData, dayHours, numDays, x, y, height, pxPerHour, minT
         const ts = new Date(d.timeStep);
         const sunT = sunTimesByDay[d.day];
         const isDay = sunT && ts >= sunT.sunrise && ts < sunT.sunset;
-        const hoursAfterSunrise = sunT ? (ts - sunT.sunrise) / 3600000 : Infinity;
-        const hoursBeforeSunset = sunT ? (sunT.sunset - ts) / 3600000 : Infinity;
+        const hoursAfterSunrise = sunT ? msToHours(ts - sunT.sunrise) : Infinity;
+        const hoursBeforeSunset = sunT ? msToHours(sunT.sunset - ts) : Infinity;
         const isDawnDusk = isDay && (hoursAfterSunrise < 1 || hoursBeforeSunset < 1);
         const baseColor = isDefined ? (isDay ? (isDawnDusk ? displayColors.orange : displayColors.yellow) : displayColors.black) : displayColors.blue;
         const colX = x + i * pxPerHour;
@@ -273,7 +276,7 @@ function drawLine(ctx, allData, dayHours, numDays, x, y, height, pxPerHour, minT
         if (d.forecast.TTT === null) return null;
         return {
             x: indexToDayX(i),
-            y: interpolatePixel(kelvinToCelsius(d.forecast.TTT), minTemp, maxTemp, y + height - tempYMargin, y + tempYMargin)
+            y: interpolatePixel(celsius(d.forecast.TTT), minTemp, maxTemp, y + height - tempYMargin, y + tempYMargin)
         };
     }).filter(v => v !== null);
     if (points.length > 2) drawCurveThroughPoints(ctx, points);
@@ -291,23 +294,23 @@ function drawLine(ctx, allData, dayHours, numDays, x, y, height, pxPerHour, minT
         const maxHour = hours.reduce((max, h) => h.forecast.TTT > max.forecast.TTT ? h : max, hours[0]);
 
         if (minHour) {
-            const text = Math.floor(kelvinToCelsius(minHour.forecast.TTT)) + '°C';
+            const text = Math.floor(celsius(minHour.forecast.TTT)) + '°C';
             const tw = ctx.measureText(text).width;
             const idx = dayHours.indexOf(minHour);
             fillTextOutlined(ctx, text,
                 Math.floor(indexToDayX(idx) - tw / 2),
-                Math.floor(interpolatePixel(kelvinToCelsius(minHour.forecast.TTT), minTemp, maxTemp, y + height - tempYMargin, y + tempYMargin) + labelBelow),
+                Math.floor(interpolatePixel(celsius(minHour.forecast.TTT), minTemp, maxTemp, y + height - tempYMargin, y + tempYMargin) + labelBelow),
                 displayColors.red, displayColors.white, outlineWidth
             );
         }
 
         if (maxHour) {
-            const text = Math.round(kelvinToCelsius(maxHour.forecast.TTT)) + '°C';
+            const text = Math.round(celsius(maxHour.forecast.TTT)) + '°C';
             const tw = ctx.measureText(text).width;
             const idx = dayHours.indexOf(maxHour);
             fillTextOutlined(ctx, text,
                 Math.floor(indexToDayX(idx) - tw / 2),
-                Math.floor(interpolatePixel(kelvinToCelsius(maxHour.forecast.TTT), minTemp, maxTemp, y + height - tempYMargin, y + tempYMargin) - labelAbove),
+                Math.floor(interpolatePixel(celsius(maxHour.forecast.TTT), minTemp, maxTemp, y + height - tempYMargin, y + tempYMargin) - labelAbove),
                 displayColors.red, displayColors.white, outlineWidth
             );
         }
@@ -351,12 +354,8 @@ function getPrecipType(forecast) {
         if ((ww >= 70 && ww <= 79) || ww === 85 || ww === 86) return 'snow';
         return 'rain';
     }
-    if (forecast.TTT !== null && forecast.TTT < 273.15 && forecast.RR1c > 0) return 'snow';
+    if (forecast.TTT !== null && celsius(forecast.TTT) < 0 && forecast.RR1c > 0) return 'snow';
     return 'rain';
-}
-
-function kelvinToCelsius(k) {
-    return k - 273.15;
 }
 
 function interpolatePixel(value, minValue, maxValue, minPixel, maxPixel) {

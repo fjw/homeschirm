@@ -184,14 +184,15 @@ function drawLine(ctx, allData, dayHours, numDays, x, y, height, pxPerHour, minT
 
     // Bewoelkung Dithering
     dayHours.forEach((d, i) => {
-        const N = d.forecast.N ?? 50;
+        const isDefined = d.forecast.N !== null;
+        const N = d.forecast.N ?? 70;
         const ts = new Date(d.timeStep);
         const sunT = sunTimesByDay[d.day];
         const isDay = sunT && ts >= sunT.sunrise && ts < sunT.sunset;
         const hoursAfterSunrise = sunT ? (ts - sunT.sunrise) / 3600000 : Infinity;
         const hoursBeforeSunset = sunT ? (sunT.sunset - ts) / 3600000 : Infinity;
         const isDawnDusk = isDay && (hoursAfterSunrise < 1 || hoursBeforeSunset < 1);
-        const baseColor = isDay ? (isDawnDusk ? displayColors.orange : displayColors.yellow) : displayColors.black;
+        const baseColor = isDefined ? (isDay ? (isDawnDusk ? displayColors.orange : displayColors.yellow) : displayColors.black) : displayColors.blue;
         const colX = x + i * pxPerHour;
         drawDitheredColumn(ctx, colX, y, pxPerHour, height, N / 100, baseColor);
     });

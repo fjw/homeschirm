@@ -28,7 +28,7 @@ exports.draw = async (data) => {
         .map(d => kelvinToCelsius(d.forecast.TTT));
     const minTemp = Math.min(...allTemps);
     const maxTemp = Math.max(...allTemps);
-    const maxRain = 5;
+    const maxRain = 15;
 
     // Layout-Berechnung
     const obsRowHeight = observation ? 24 : 0;
@@ -69,7 +69,7 @@ exports.draw = async (data) => {
         const firstTs = new Date(row1Days[0].timeStep);
         const nowHour = Math.ceil((now - firstTs) / 3600000);
         if (nowHour >= 0 && nowHour < 24) {
-            const nowX = row1X + nowHour * pxPerHour1 + Math.floor(pxPerHour1 / 2);
+            const nowX = row1X + nowHour * pxPerHour1 + Math.floor(pxPerHour1 / 2) - 1;
             ctx.fillStyle = displayColors.green;
             ctx.fillRect(nowX, vMargin, 2, row1Height);
         }
@@ -98,7 +98,7 @@ exports.draw = async (data) => {
             const warnWidth = ctx.measureText(warnText).width;
             ctx.fillStyle = displayColors.white;
             ctx.fillRect(dateLabelX - 2, warningY, warnWidth + 4, 26);
-            ctx.fillStyle = displayColors.orange;
+            ctx.fillStyle = displayColors.black;
             ctx.fillText(warnText, dateLabelX, warningY + 22);
             warningY += 28;
         }
@@ -113,7 +113,7 @@ exports.draw = async (data) => {
         if (observation.temperature !== null) segments.push({ text: `${Math.round(observation.temperature)}°C`, color: displayColors.red });
         if (observation.humidity !== null) segments.push({ text: `${Math.round(observation.humidity)}% rF`, color: displayColors.orange });
         if (observation.windSpeed !== null) segments.push({ text: `${Math.round(observation.windSpeed)}km/h`, color: displayColors.black });
-        if (observation.precipitation !== null && observation.precipitation > 0) segments.push({ text: `${observation.precipitation.toFixed(1)} mm`, color: displayColors.blue });
+        if (observation.precipitation !== null && observation.precipitation > 0) segments.push({ text: `${observation.precipitation.toFixed(1)}mm`, color: displayColors.blue });
         const totalWidth = segments.reduce((w, s, i) => w + ctx.measureText(s.text).width + (i > 0 ? ctx.measureText(gap).width : 0), 0);
         let obsX = hMargin + Math.floor((contentWidth - totalWidth) / 2);
         segments.forEach((s, i) => {
@@ -140,7 +140,7 @@ exports.draw = async (data) => {
         if (!dk) break;
         const d = new Date(dk);
         const label = weekdayShort[d.getUTCDay()];
-        const lx = row2X + i * row2DayWidth + 4;
+        const lx = row2X + i * row2DayWidth + 5;
         const ly = row2Y + 4;
         const lw = ctx.measureText(label).width;
         ctx.fillStyle = displayColors.white;
@@ -206,7 +206,7 @@ function drawLine(ctx, allData, dayHours, numDays, x, y, height, pxPerHour, minT
         if (!rain || rain <= 0) return;
 
         const type = getPrecipType(d.forecast);
-        let rainH = interpolatePixel(rain, 0, maxRain, 0, height - 2 * rainYMargin);
+        let rainH = (height - 2 * rainYMargin) * Math.sqrt(rain) / Math.sqrt(maxRain);
         let overflow = false;
         if (rainH > height - 2 * rainYMargin) {
             rainH = height - 2 * rainYMargin;

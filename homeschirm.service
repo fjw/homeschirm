@@ -7,7 +7,7 @@ Wants=network-online.target
 Type=simple
 User=frederic
 WorkingDirectory=/home/frederic/homeschirm
-ExecStart=/usr/bin/node src/index.js
+ExecStart=/home/frederic/.nvm/versions/node/v21.7.3/bin/node src/index.js
 Environment=NODE_ENV=production
 Restart=on-failure
 RestartSec=60

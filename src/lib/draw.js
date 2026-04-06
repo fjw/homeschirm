@@ -4,10 +4,13 @@ const { displayColors, showDaysCount, pngTmpFile } = require('../config');
 const { resolve } = require('path');
 const suncalc = require('suncalc');
 
-registerFont(resolve('MINERVA1.otf'), { family: 'Minerva' });
-registerFont(resolve('CozetteVector.ttf'), { family: 'Cozette' });
+registerFont(resolve('fonts/spleen-12x24.otf'), { family: 'Spleen24' });
+registerFont(resolve('fonts/spleen-8x16.otf'), { family: 'Spleen16' });
+registerFont(resolve('fonts/spleen-6x12.otf'), { family: 'Spleen12' });
 
-const fontFamily = 'Cozette';
+const fontFamily = 'Spleen24';
+const fontFamilyMed = 'Spleen16';
+const fontFamilySmall = 'Spleen12';
 
 exports.draw = async (data) => {
     const warnings = data.warnings || [];
@@ -61,7 +64,7 @@ exports.draw = async (data) => {
     // Zeile 1: erster Tag (zentriert)
     const row1Days = data.days.filter(d => d.day === dayKeys[0]);
     const row1X = hMargin;
-    drawLine(ctx, data, row1Days, 1, row1X, vMargin, row1Height, pxPerHour1, minTemp, maxTemp, maxRain);
+    drawLine(ctx, data, row1Days, 1, row1X, vMargin, row1Height, pxPerHour1, minTemp, maxTemp, maxRain, 24);
 
     // "Jetzt"-Linie (aufgerundet auf naechste volle Stunde)
     if (row1Days.length > 0) {
@@ -71,7 +74,7 @@ exports.draw = async (data) => {
         if (nowHour >= 0 && nowHour < 24) {
             const nowX = row1X + nowHour * pxPerHour1 + Math.floor(pxPerHour1 / 2) - 1;
             ctx.fillStyle = displayColors.green;
-            ctx.fillRect(nowX, vMargin, 2, row1Height);
+            ctx.fillRect(nowX, vMargin, 3, row1Height);
         }
     }
 
@@ -82,10 +85,10 @@ exports.draw = async (data) => {
     const dateLabel = `${weekdays[firstDate.getUTCDay()]}, ${firstDate.getUTCDate()}. ${months[firstDate.getUTCMonth()]}`;
     ctx.font = `24px ${fontFamily}`;
     const dateLabelWidth = ctx.measureText(dateLabel).width;
-    const dateLabelX = row1X + 8;
+    const dateLabelX = row1X + 12;
     const dateLabelY = vMargin + 6;
     ctx.fillStyle = displayColors.white;
-    ctx.fillRect(dateLabelX - 2, dateLabelY, dateLabelWidth + 4, 26);
+    ctx.fillRect(dateLabelX - 6, dateLabelY, dateLabelWidth + 12, 26);
     ctx.fillStyle = displayColors.black;
     ctx.fillText(dateLabel, dateLabelX, dateLabelY + 22);
 
@@ -97,7 +100,7 @@ exports.draw = async (data) => {
             const warnText = `${w.headline || w.event}`;
             const warnWidth = ctx.measureText(warnText).width;
             ctx.fillStyle = displayColors.white;
-            ctx.fillRect(dateLabelX - 2, warningY, warnWidth + 4, 26);
+            ctx.fillRect(dateLabelX - 6, warningY, warnWidth + 12, 26);
             ctx.fillStyle = displayColors.black;
             ctx.fillText(warnText, dateLabelX, warningY + 22);
             warningY += 28;
@@ -130,33 +133,33 @@ exports.draw = async (data) => {
     const row2TotalWidth = row2DayWidth * restDaysCount;
     const row2X = hMargin;
     const row2Y = vMargin + row1Height + rowGap;
-    drawLine(ctx, data, row2Days, restDaysCount, row2X, row2Y, row2Height, pxPerHour2, minTemp, maxTemp, maxRain);
+    drawLine(ctx, data, row2Days, restDaysCount, row2X, row2Y, row2Height, pxPerHour2, minTemp, maxTemp, maxRain, 16);
 
     // Wochentag-Kuerzel in Zeile 2
     const weekdayShort = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
-    ctx.font = `16px ${fontFamily}`;
+    ctx.font = `16px ${fontFamilyMed}`;
     for (let i = 0; i < restDaysCount; i++) {
         const dk = dayKeys[i + 1];
         if (!dk) break;
         const d = new Date(dk);
         const label = weekdayShort[d.getUTCDay()];
-        const lx = row2X + i * row2DayWidth + 5;
-        const ly = row2Y + 4;
+        const lx = row2X + i * row2DayWidth + 7;
+        const ly = row2Y + 3;
         const lw = ctx.measureText(label).width;
         ctx.fillStyle = displayColors.white;
-        ctx.fillRect(lx - 1, ly, lw + 2, 18);
+        ctx.fillRect(lx - 4, ly, lw + 8, 18);
         ctx.fillStyle = displayColors.black;
-        ctx.fillText(label, lx, ly + 15);
+        ctx.fillText(label, lx, ly + 14);
     }
 
     writeFileSync(pngTmpFile, cnv.toBuffer());
     console.log('done');
 };
 
-function drawLine(ctx, allData, dayHours, numDays, x, y, height, pxPerHour, minTemp, maxTemp, maxRain) {
+function drawLine(ctx, allData, dayHours, numDays, x, y, height, pxPerHour, minTemp, maxTemp, maxRain, fontSize) {
     const tempYMargin = Math.max(4, Math.round(height * 0.06));
     const rainYMargin = Math.max(2, Math.round(height * 0.03));
-    const fontSize = 20;
+    const font = fontSize <= 12 ? `12px ${fontFamilySmall}` : fontSize <= 16 ? `16px ${fontFamilyMed}` : `24px ${fontFamily}`;
     const rainBarWidth = Math.max(2, Math.round(pxPerHour * 0.45));
     const outlineWidth = 6;
 
@@ -275,7 +278,7 @@ function drawLine(ctx, allData, dayHours, numDays, x, y, height, pxPerHour, minT
     if (points.length > 2) drawCurveThroughPoints(ctx, points);
 
     // Min/Max Temperaturbeschriftungen pro Tag
-    ctx.font = `${fontSize}px ${fontFamily}`;
+    ctx.font = font;
     const labelBelow = Math.max(8, Math.round(height * 0.05));
     const labelAbove = Math.max(2, Math.round(height * 0.01));
 

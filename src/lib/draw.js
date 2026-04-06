@@ -107,10 +107,10 @@ exports.draw = async (data) => {
     // Aktuelle Messwerte zwischen den Zeilen
     if (observation) {
         const obsY = vMargin + row1Height + 9 + 19;
-        ctx.font = `20px ${fontFamily}`;
+        ctx.font = `24px ${fontFamily}`;
         const gap = '  ';
         const segments = [];
-        if (observation.temperature !== null) segments.push({ text: `${observation.temperature.toFixed(1)}°C`, color: displayColors.red });
+        if (observation.temperature !== null) segments.push({ text: `${Math.round(observation.temperature)}°C`, color: displayColors.red });
         if (observation.humidity !== null) segments.push({ text: `${Math.round(observation.humidity)}% rF`, color: displayColors.orange });
         if (observation.windSpeed !== null) segments.push({ text: `${Math.round(observation.windSpeed)}km/h`, color: displayColors.black });
         if (observation.precipitation !== null && observation.precipitation > 0) segments.push({ text: `${observation.precipitation.toFixed(1)} mm`, color: displayColors.blue });

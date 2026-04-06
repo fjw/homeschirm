@@ -268,7 +268,7 @@ function drawLine(ctx, allData, dayHours, numDays, x, y, height, pxPerHour, minT
 
     // Temperaturkurve
     ctx.strokeStyle = displayColors.red;
-    ctx.lineWidth = 2;
+    ctx.lineWidth = numDays === 1 ? 3: 2;
     const points = dayHours.map((d, i) => {
         if (d.forecast.TTT === null) return null;
         return {
@@ -280,8 +280,8 @@ function drawLine(ctx, allData, dayHours, numDays, x, y, height, pxPerHour, minT
 
     // Min/Max Temperaturbeschriftungen pro Tag
     ctx.font = font;
-    const labelBelow = Math.max(8, Math.round(height * 0.05));
-    const labelAbove = Math.max(2, Math.round(height * 0.01));
+    const labelBelow = Math.max(8, Math.round(height * 0.05)) + 8;
+    const labelAbove = Math.max(2, Math.round(height * 0.01)) + 3;
 
     Object.keys(groupedPerDay).forEach(key => {
         const hours = groupedPerDay[key].filter(h => h.forecast.TTT !== null);

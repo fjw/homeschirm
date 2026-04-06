@@ -7,5 +7,5 @@ const {jsonTmpFile} = require("../config");
 
 dwdForecast.update().then(fc => prepareData(fc, null).then(data => {
     fs.writeFile(jsonTmpFile, JSON.stringify(data))
-        .then(() => console.log(data));
+        .then(() => console.log('done → ' + jsonTmpFile));
 }));

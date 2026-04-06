@@ -20,5 +20,6 @@ exports.displayColors = {
 
 exports.showDaysCount = 5;
 
+exports.observationEndpoint = "https://opendata.dwd.de/weather/weather_reports/poi/10865-BEOB.csv";
 exports.warningsEndpoint = "https://opendata.dwd.de/weather/alerts/cap/DISTRICT_CELLS_STAT/";
 exports.warningsZipTmpFile = __dirname + '/../data/warnings.zip';

@@ -82,6 +82,8 @@ exports.prepareData = async (newdata, data) => {
             lon: newdata.coordinates[0],
             h: newdata.coordinates[2],
         },
+        warnings: newdata.warnings || [],
+        observation: newdata.observation || null,
         days: d
     };
 }

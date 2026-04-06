@@ -9,7 +9,9 @@ registerFont(resolve('CozetteVector.ttf'), { family: 'Cozette' });
 
 const fontFamily = 'Cozette';
 
-exports.draw = async (data, warnings = []) => {
+exports.draw = async (data) => {
+    const warnings = data.warnings || [];
+    const observation = data.observation || null;
     const cnv = createCanvas(800, 480);
     const ctx = cnv.getContext('2d');
 
@@ -29,7 +31,8 @@ exports.draw = async (data, warnings = []) => {
     const maxRain = 5;
 
     // Layout-Berechnung
-    const rowGap = 18;
+    const obsRowHeight = observation ? 24 : 0;
+    const rowGap = 18 + obsRowHeight;
     const restDaysCount = showDaysCount - 1;
 
     // Zeile 2 bestimmt die gemeinsame Breite (mehr Rundungsverlust)
@@ -60,6 +63,18 @@ exports.draw = async (data, warnings = []) => {
     const row1X = hMargin;
     drawLine(ctx, data, row1Days, 1, row1X, vMargin, row1Height, pxPerHour1, minTemp, maxTemp, maxRain);
 
+    // "Jetzt"-Linie (aufgerundet auf naechste volle Stunde)
+    if (row1Days.length > 0) {
+        const now = new Date();
+        const firstTs = new Date(row1Days[0].timeStep);
+        const nowHour = Math.ceil((now - firstTs) / 3600000);
+        if (nowHour >= 0 && nowHour < 24) {
+            const nowX = row1X + nowHour * pxPerHour1 + Math.floor(pxPerHour1 / 2);
+            ctx.fillStyle = displayColors.green;
+            ctx.fillRect(nowX, vMargin, 2, row1Height);
+        }
+    }
+
     // Wochentag + Datum oben links
     const weekdays = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'];
     const months = ['Januar', 'Februar', 'Maerz', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
@@ -89,6 +104,26 @@ exports.draw = async (data, warnings = []) => {
         }
     }
 
+    // Aktuelle Messwerte zwischen den Zeilen
+    if (observation) {
+        const obsY = vMargin + row1Height + 9 + 19;
+        ctx.font = `20px ${fontFamily}`;
+        const gap = '  ';
+        const segments = [];
+        if (observation.temperature !== null) segments.push({ text: `${observation.temperature.toFixed(1)}°C`, color: displayColors.red });
+        if (observation.humidity !== null) segments.push({ text: `${Math.round(observation.humidity)}% rF`, color: displayColors.orange });
+        if (observation.windSpeed !== null) segments.push({ text: `${Math.round(observation.windSpeed)}km/h`, color: displayColors.black });
+        if (observation.precipitation !== null && observation.precipitation > 0) segments.push({ text: `${observation.precipitation.toFixed(1)} mm`, color: displayColors.blue });
+        const totalWidth = segments.reduce((w, s, i) => w + ctx.measureText(s.text).width + (i > 0 ? ctx.measureText(gap).width : 0), 0);
+        let obsX = hMargin + Math.floor((contentWidth - totalWidth) / 2);
+        segments.forEach((s, i) => {
+            if (i > 0) obsX += ctx.measureText(gap).width;
+            ctx.fillStyle = s.color;
+            ctx.fillText(s.text, obsX, obsY);
+            obsX += ctx.measureText(s.text).width;
+        });
+    }
+
     // Zeile 2: restliche Tage (zentriert)
     const row2DayKeySet = new Set(dayKeys.slice(1, showDaysCount));
     const row2Days = data.days.filter(d => row2DayKeySet.has(d.day));
@@ -96,6 +131,23 @@ exports.draw = async (data, warnings = []) => {
     const row2X = hMargin;
     const row2Y = vMargin + row1Height + rowGap;
     drawLine(ctx, data, row2Days, restDaysCount, row2X, row2Y, row2Height, pxPerHour2, minTemp, maxTemp, maxRain);
+
+    // Wochentag-Kuerzel in Zeile 2
+    const weekdayShort = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
+    ctx.font = `16px ${fontFamily}`;
+    for (let i = 0; i < restDaysCount; i++) {
+        const dk = dayKeys[i + 1];
+        if (!dk) break;
+        const d = new Date(dk);
+        const label = weekdayShort[d.getUTCDay()];
+        const lx = row2X + i * row2DayWidth + 4;
+        const ly = row2Y + 4;
+        const lw = ctx.measureText(label).width;
+        ctx.fillStyle = displayColors.white;
+        ctx.fillRect(lx - 1, ly, lw + 2, 18);
+        ctx.fillStyle = displayColors.black;
+        ctx.fillText(label, lx, ly + 15);
+    }
 
     writeFileSync(pngTmpFile, cnv.toBuffer());
     console.log('done');
@@ -133,13 +185,16 @@ function drawLine(ctx, allData, dayHours, numDays, x, y, height, pxPerHour, minT
         const ts = new Date(d.timeStep);
         const sunT = sunTimesByDay[d.day];
         const isDay = sunT && ts >= sunT.sunrise && ts < sunT.sunset;
-        const baseColor = isDay ? displayColors.yellow : displayColors.black;
+        const hoursAfterSunrise = sunT ? (ts - sunT.sunrise) / 3600000 : Infinity;
+        const hoursBeforeSunset = sunT ? (sunT.sunset - ts) / 3600000 : Infinity;
+        const isDawnDusk = isDay && (hoursAfterSunrise < 1 || hoursBeforeSunset < 1);
+        const baseColor = isDay ? (isDawnDusk ? displayColors.orange : displayColors.yellow) : displayColors.black;
         const colX = x + i * pxPerHour;
         drawDitheredColumn(ctx, colX, y, pxPerHour, height, N / 100, baseColor);
     });
 
     // Sonnenauf-/untergangslinien
-    ctx.fillStyle = displayColors.yellow;
+    ctx.fillStyle = displayColors.orange;
     sunTimes.forEach(({ sunriseX, sunsetX }) => {
         ctx.fillRect(sunriseX, y, 1, height);
         ctx.fillRect(sunsetX, y, 1, height);
@@ -188,7 +243,7 @@ function drawLine(ctx, allData, dayHours, numDays, x, y, height, pxPerHour, minT
 
     // Tagestrennlinien
     ctx.strokeStyle = displayColors.black;
-    ctx.lineWidth = 1;
+    ctx.lineWidth = 2;
     for (let i = 1; i < numDays; i++) {
         ctx.beginPath();
         ctx.moveTo(x + i * 24 * pxPerHour, y);
@@ -200,7 +255,7 @@ function drawLine(ctx, allData, dayHours, numDays, x, y, height, pxPerHour, minT
     const zeroY = interpolatePixel(0, minTemp, maxTemp, y + height - tempYMargin, y + tempYMargin);
     if (zeroY > y && zeroY < y + height) {
         ctx.strokeStyle = displayColors.black;
-        ctx.lineWidth = 1;
+        ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.moveTo(x, zeroY);
         ctx.lineTo(x + numDays * 24 * pxPerHour, zeroY);

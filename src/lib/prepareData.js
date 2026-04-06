@@ -10,13 +10,13 @@ exports.prepareData = async (newdata, data) => {
         };
     }
 
-    // group old data by hour
+    // Alte Daten nach Stunde gruppieren
     const objectByHour = {};
     data.days.forEach(day => {
         objectByHour[getIdFromDate(new Date(day.timeStep))] = day;
     });
 
-    // overwrite hour data with newdata, keep data from days/hours not included in current forecast
+    // Stundendaten mit neuen Daten überschreiben, Stunden außerhalb des aktuellen Forecasts behalten
     newdata.timeSteps.forEach((timestep, i) => {
 
         const ts = new Date(timestep);
@@ -37,20 +37,20 @@ exports.prepareData = async (newdata, data) => {
 
     });
 
-    // get next days from today (not issueTime, which may be yesterday)
+    // Nächste Tage ab heute (nicht ab issueTime, die kann von gestern sein)
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const nextdays = Array.from({length: showDaysCount},
         (v, i) => new Date(new Date(today).setDate(today.getDate() + i))
     ).map(d => getDayIdFromDate(d));
 
-    // prepare empty forecast for fill in
+    // Leeren Forecast als Vorlage vorbereiten
     const emptyForecast = {};
     Object.keys(newdata.forecast).forEach(forecastKey => {
         emptyForecast[forecastKey] = null;
     });
 
-    // fillup missing hours
+    // Fehlende Stunden auffüllen
     nextdays.forEach(day => {
         for (let h = 0; h < 24; h++) {
 
@@ -68,10 +68,10 @@ exports.prepareData = async (newdata, data) => {
         }
     });
 
-    // filter out days not in range
+    // Tage außerhalb des Bereichs entfernen
     const d = Object.values(objectByHour).filter(i => nextdays.includes(i.day));
 
-    //order by timeStep
+    // Nach Zeitpunkt sortieren
     d.sort((a, b) => new Date(a.timeStep) - new Date(b.timeStep));
 
     return {

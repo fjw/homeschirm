@@ -1,8 +1,8 @@
 /**
- * Generates dummy weather data and writes it to data/mosmix.json
- * Run with: node src/scripts/createDummyData.js
+ * Erzeugt Dummy-Wetterdaten und schreibt sie nach data/mosmix.json
+ * Ausführen mit: node src/scripts/createDummyData.js
  *
- * Scenario (alle Zeichenstile abgedeckt):
+ * Szenario (alle Zeichenstile abgedeckt):
  *   Day 0 (today):   Mischung: Sonne morgens, Regen mittags, abends klar. Nulllinie sichtbar (Temp um 0°C nachts).
  *   Day 1:           Starkregen mit Overflow (>5mm), Eisregen nachmittags (ww=67), Hagel abends (ww=89).
  *   Day 2:           Frost + Schnee (TTT < 0°C, ww=70-79), Bedeckungs-Gradient 0→100.
@@ -60,7 +60,7 @@ const days = [
         N:    Array(24).fill(100),
         sunRise: 4, sunSet: 18, peakSun: 0,
     },
-    // Extra Tage falls showDaysCount > 5
+    // Zusätzliche Tage falls showDaysCount > 5
     { min: 6, max: 16, rain: null, N: Array.from({length: 24}, (_, h) => (h >= 6 && h < 18) ? 0 : 80), sunRise: 4, sunSet: 18, peakSun: 2800 },
     { min: 3, max: 13, rain: null, N: Array.from({length: 24}, (_, h) => (h >= 6 && h < 18) ? 80 : 0), sunRise: 4, sunSet: 18, peakSun: 400 },
     { min: 5, max: 15, rain: null, N: ramp(100, 0), sunRise: 4, sunSet: 18, peakSun: 1500 },
@@ -89,7 +89,7 @@ for (let dayIndex = 0; dayIndex < showDaysCount; dayIndex++) {
         ts.setDate(ts.getDate() + dayIndex);
         ts.setHours(h, 0, 0, 0);
 
-        // Temperature: min at 4 UTC, max at 14 UTC
+        // Temperatur: Minimum um 4 UTC, Maximum um 14 UTC
         const tempC = avg + amp * Math.cos((h - 14) * Math.PI / 12);
         const TTT = C(tempC);
 

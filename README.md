@@ -3,6 +3,14 @@
 Wetteranzeige für ein **Waveshare 7.3" 7-Farben E-Paper Display** (epd7in3f) auf einem Raspberry Pi.
 Zeigt DWD MOSMIX-Forecast (5 Tage), aktuelle Messwerte und Wetterwarnungen an.
 
+![demo](./demo.png)
+
+## Erklärungen:
+
+- Stärke des Dithering ist die Bedeckung/Bewölkung. weiß = bewölkt, schwarz/orange/gelb = klar/sonnig
+- blaue Balken sind der Niederschlag. Regen ist blau ausgefüllt, Schnee ist weiß ausgefüllt und Schneeregen, sowie Hagel sind ein gestrichelter Balken, wobei bei Hagel die Strichel schwarz sind.
+- rote Linie ist die Temperatur, grüne Linie ist die aktuelle Uhrzeit (jetzt-Linie)
+
 ## eigene Wetterstation einstellen
 
 in der config.js:

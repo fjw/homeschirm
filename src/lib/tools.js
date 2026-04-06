@@ -1,7 +1,7 @@
 /**
- * Converts a milliseconds time into human readable form.
+ * Wandelt Millisekunden in lesbares Format um.
  *
- * example: "5d 10h 36m 15s"
+ * Beispiel: "5d 10h 36m 15s"
  *
  * @param ms
  * @returns {string}
@@ -31,10 +31,10 @@ exports.msToHumanReadable = ms => {
 
 
 /**
- * Runs a shell command in a sub process and returns {stdout, stderr}
+ * Führt einen Shell-Befehl als Subprozess aus und gibt {stdout, stderr} zurück.
  *
- * @param {string} command command to execute in the shell
- * @param {*} options options as array of string
+ * @param {string} command Shell-Befehl
+ * @param {*} options Optionen als String-Array
  * @returns {Promise<{cmd: array, error: *}|{cmd: array, stdout: string, stderr: string}>}
  */
 exports.cmd = (command, options) => {

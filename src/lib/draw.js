@@ -25,7 +25,7 @@ exports.draw = async (data) => {
     ctx.fillStyle = displayColors.white;
     ctx.fillRect(0, 0, 800, 480);
 
-    // Globale Skalen (gleich fuer beide Zeilen)
+    // Globale Skalen (gleich für beide Zeilen)
     const allTemps = data.days
         .filter(d => d.forecast.TTT !== null)
         .map(d => kelvinToCelsius(d.forecast.TTT));
@@ -51,7 +51,7 @@ exports.draw = async (data) => {
     // Vertikaler Rand = horizontaler Rand
     const vMargin = hMargin;
 
-    // Gleiche Seitenverhaeltnisse: row1Height/row1DayWidth = row2Height/row2DayWidth
+    // Gleiche Seitenverhältnisse: row1Height/row1DayWidth = row2Height/row2DayWidth
     const availableHeight = 480 - vMargin * 2 - rowGap;
     const ratio = row2DayWidth / row1DayWidth;
     const row1Height = Math.floor(availableHeight / (1 + ratio));
@@ -66,7 +66,7 @@ exports.draw = async (data) => {
     const row1X = hMargin;
     drawLine(ctx, data, row1Days, 1, row1X, vMargin, row1Height, pxPerHour1, minTemp, maxTemp, maxRain, 24);
 
-    // "Jetzt"-Linie (aufgerundet auf naechste volle Stunde)
+    // "Jetzt"-Linie (aufgerundet auf nächste volle Stunde)
     if (row1Days.length > 0) {
         const now = new Date();
         const firstTs = new Date(row1Days[0].timeStep);
@@ -135,7 +135,7 @@ exports.draw = async (data) => {
     const row2Y = vMargin + row1Height + rowGap;
     drawLine(ctx, data, row2Days, restDaysCount, row2X, row2Y, row2Height, pxPerHour2, minTemp, maxTemp, maxRain, 16);
 
-    // Wochentag-Kuerzel in Zeile 2
+    // Wochentag-Kürzel in Zeile 2
     const weekdayShort = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
     ctx.font = `16px ${fontFamilyMed}`;
     for (let i = 0; i < restDaysCount; i++) {
@@ -182,7 +182,7 @@ function drawLine(ctx, allData, dayHours, numDays, x, y, height, pxPerHour, minT
     });
     const sunTimesByDay = Object.fromEntries(sunTimes.map(s => [s.day, s]));
 
-    // Bewoelkung Dithering
+    // Bewölkung Dithering
     dayHours.forEach((d, i) => {
         const isDefined = d.forecast.N !== null;
         const N = d.forecast.N ?? 70;

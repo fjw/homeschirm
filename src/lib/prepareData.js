@@ -62,7 +62,7 @@ exports.prepareData = async (newdata, data) => {
                     hour: h,
                     timeStep: timeStep.toISOString(),
                     issueTime: null,
-                    forecast: emptyForecast,
+                    forecast: {...emptyForecast},
                 };
             }
         }

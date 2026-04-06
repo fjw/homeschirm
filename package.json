@@ -7,7 +7,8 @@
   },
   "scripts": {
     "dev": "NODE_ENV=development npx nodemon --ignore data src/index.js",
-    "start": "NODE_ENV=production node src/index.js"
+    "start": "NODE_ENV=production node src/index.js",
+    "reset": "rm -rf data/mosmix.json data/mosmix.kml data/mosmix.kmz data/screen.png data/screen.bmp data/warnings.json data/warnings.zip data/warnings data/umlaut_test.png data/screen2.bmp"
   },
   "dependencies": {
     "canvas": "^3.2.3",

@@ -1,0 +1,16 @@
+[Unit]
+Description=Homeschirm Weather Display
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=frederic
+WorkingDirectory=/home/frederic/homeschirm
+ExecStart=/usr/bin/node src/index.js
+Environment=NODE_ENV=production
+Restart=on-failure
+RestartSec=60
+
+[Install]
+WantedBy=multi-user.target

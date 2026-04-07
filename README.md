@@ -27,7 +27,7 @@ Man kann die Stationen in den offiziellen DWD-Katalogen finden:
 
 ## Ablauf
 
-1. DWD MOSMIX_S Forecast laden (KMZ, Station `P860` / 10865)
+1. DWD MOSMIX_S Forecast laden (KMZ)
 2. KML vorfiltern (nur relevante Station) und parsen
 3. Aktuelle Messwerte von DWD POI abrufen
 4. Wetterwarnungen laden (CAP/DISTRICT_CELLS)

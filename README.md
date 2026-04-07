@@ -43,6 +43,12 @@ Man kann die Stationen in den offiziellen DWD-Katalogen finden:
 - Python 3 mit PIL, numpy, spidev, gpiozero
 - ImageMagick
 
+## Rahmen
+
+Der von mir konstruierte Rahmen kann hier zum 3D-Druck gedownloaded werden: https://makerworld.com/en/models/2628826-frame-for-waveshare-7-3-e-paper-display
+
+![rahmen](./frame.jpg)
+
 ## Daten
 
 Alte Daten werden immer behalten und stündlich mit den neuen angereichert, damit auch die vergangenen Stunden

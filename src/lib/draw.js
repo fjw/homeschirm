@@ -85,7 +85,7 @@ exports.draw = async (data) => {
     const weekdays = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'];
     const months = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
     const firstDate = new Date(dayKeys[0]);
-    const dateLabel = `${weekdays[firstDate.getUTCDay()]}, ${firstDate.getUTCDate()}. ${months[firstDate.getUTCMonth()]}`;
+    const dateLabel = `${weekdays[firstDate.getDay()]}, ${firstDate.getDate()}. ${months[firstDate.getMonth()]}`;
     ctx.font = `24px ${fontFamily}`;
     const dateLabelWidth = ctx.measureText(dateLabel).width;
     const dateLabelX = row1X + 12;
@@ -145,7 +145,7 @@ exports.draw = async (data) => {
         const dk = dayKeys[i + 1];
         if (!dk) break;
         const d = new Date(dk);
-        const label = weekdayShort[d.getUTCDay()];
+        const label = weekdayShort[d.getDay()];
         const lx = row2X + i * row2DayWidth + 7;
         const ly = row2Y + 3;
         const lw = ctx.measureText(label).width;

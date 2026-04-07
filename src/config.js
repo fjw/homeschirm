@@ -4,7 +4,7 @@ exports.updateCronTime = '46 * * * *';
 
 exports.kmlTmpFile = __dirname + '/../data/mosmix.kml';
 exports.kmzTmpFile = __dirname + '/../data/mosmix.kmz';
-exports.jsonTmpFile = __dirname + '/../data/mosmix.json';
+exports.jsonTmpFile = __dirname + '/../data/data.json';
 exports.pngTmpFile = __dirname + '/../data/screen.png';
 exports.bmpTmpFile = __dirname + '/../data/screen.bmp';
 
@@ -19,6 +19,7 @@ exports.displayColors = {
 };
 
 exports.showDaysCount = 5;
+exports.showMinorWarnings = false;
 
 exports.observationEndpoint = "https://opendata.dwd.de/weather/weather_reports/poi/10865-BEOB.csv";
 exports.warningsEndpoint = "https://opendata.dwd.de/weather/alerts/cap/DISTRICT_CELLS_STAT/";

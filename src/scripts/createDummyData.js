@@ -1,5 +1,5 @@
 /**
- * Erzeugt Dummy-Wetterdaten und schreibt sie nach data/mosmix.json
+ * Erzeugt Dummy-Wetterdaten und schreibt sie nach data/data.json
  * Ausführen mit: node src/scripts/createDummyData.js
  *
  * Szenario (alle Zeichenstile abgedeckt):
@@ -130,8 +130,10 @@ const output = {
     updateTime: new Date().toISOString(),
     coords: { lat: 48.12, lon: 11.78, h: 716 },
     warnings: [
-        { event: 'STARKWIND', severity: 'Minor', headline: 'Amtliche Warnung vor STARKWIND', description: 'Boeen bis 60 km/h', onset: issueTime.toISOString(), expires: null, areaDesc: 'Landkreis Muenchen' },
-        { event: 'FROST', severity: 'Moderate', headline: 'Amtliche Warnung vor FROST', description: 'Tiefstwerte bis -6°C', onset: issueTime.toISOString(), expires: null, areaDesc: 'Landkreis Muenchen' },
+        { event: 'FROST', severity: 'Minor', headline: 'Amtliche WARNUNG vor FROST', description: 'Tiefstwerte bis -3°C', onset: issueTime.toISOString(), expires: null, areaDesc: 'Kreis Starnberg' },
+        { event: 'STURMBÖEN', severity: 'Moderate', headline: 'Amtliche WARNUNG vor STURMBÖEN', description: 'Böen bis 85 km/h', onset: issueTime.toISOString(), expires: null, areaDesc: 'Kreis Starnberg' },
+        { event: 'SCHWERES GEWITTER', severity: 'Severe', headline: 'UNWETTERWARNUNG vor SCHWEREM GEWITTER', description: 'Hagel >2cm, Böen >100 km/h', onset: issueTime.toISOString(), expires: null, areaDesc: 'Kreis Starnberg' },
+        { event: 'EXTREMER ORKAN', severity: 'Extreme', headline: 'EXTREME UNWETTERWARNUNG vor ORKAN', description: 'Böen >140 km/h', onset: issueTime.toISOString(), expires: null, areaDesc: 'Kreis Starnberg' },
     ],
     observation: {
         temperature: 10.1,
@@ -142,7 +144,7 @@ const output = {
     days: result,
 };
 
-const outPath = path.join(__dirname, '../../data/mosmix.json');
+const outPath = path.join(__dirname, '../../data/data.json');
 fs.mkdirSync(path.dirname(outPath), { recursive: true });
 fs.writeFileSync(outPath, JSON.stringify(output));
 console.log(`Dummy data written to ${outPath}`);

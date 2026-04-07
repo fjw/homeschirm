@@ -35,7 +35,7 @@ Lauft auf einem **Raspberry Pi** mit angeschlossenem Display.
 | `src/lib/finalize.js` | PNG→BMP Konvertierung + Display-Push |
 | `src/lib/tools.js` | Hilfsfunktionen (cmd, msToHumanReadable) |
 | `python_src/display_bitmap.py` | BMP aufs E-Ink Display senden |
-| `data/` | Temporare Dateien (mosmix.kml/.kmz/.json, screen.png/.bmp) |
+| `data/` | Temporare Dateien (data.json, mosmix.kml/.kmz, screen.png/.bmp) |
 
 ---
 
@@ -116,7 +116,7 @@ npm start
 ## Datenstruktur
 
 ```js
-// actData (aus data/mosmix.json)
+// actData (aus data/data.json)
 {
   issueTime: "ISO-String",   // Ausgabezeitpunkt des DWD-Modells
   updateTime: "ISO-String",  // Letzter lokaler Abruf

@@ -1,5 +1,5 @@
 const { draw } = require('../lib/draw');
-const data = require('../../data/mosmix.json');
+const data = require('../../data/data.json');
 const { convertToBmp, pushToDisplay } = require("../lib/finalize");
 
 draw(data)

@@ -1,6 +1,6 @@
 const { createCanvas, registerFont } = require('canvas');
 const { writeFileSync } = require('fs');
-const { displayColors, showDaysCount, pngTmpFile } = require('../config');
+const { displayColors, showDaysCount, showMinorWarnings, pngTmpFile } = require('../config');
 const { resolve } = require('path');
 const suncalc = require('suncalc');
 
@@ -96,15 +96,22 @@ exports.draw = async (data) => {
     ctx.fillText(dateLabel, dateLabelX, dateLabelY + 22);
 
     // Warnungen unter dem Datum
-    if (warnings.length > 0) {
+    const severityColors = {
+        'Moderate': displayColors.black,
+        'Severe': displayColors.orange,
+        'Extreme': displayColors.red,
+    };
+    const visibleWarnings = warnings.filter(w => showMinorWarnings || w.severity !== 'Minor');
+    if (visibleWarnings.length > 0) {
         ctx.font = `24px ${fontFamily}`;
         let warningY = dateLabelY + 32;
-        for (const w of warnings) {
+        for (const w of visibleWarnings) {
+            const color = severityColors[w.severity] || displayColors.black;
             const warnText = `${w.headline || w.event}`;
             const warnWidth = ctx.measureText(warnText).width;
             ctx.fillStyle = displayColors.white;
             ctx.fillRect(dateLabelX - 6, warningY, warnWidth + 12, 26);
-            ctx.fillStyle = displayColors.black;
+            ctx.fillStyle = color;
             ctx.fillText(warnText, dateLabelX, warningY + 22);
             warningY += 28;
         }

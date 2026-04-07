@@ -32,7 +32,9 @@ exports.fetchWarnings = async (lat, lon) => {
 
         for (const file of files) {
             const warning = await parseWarningXml(resolve(WARNINGS_DIR, file));
-            if (warning && isAffected(warning, lat, lon)) {
+            if (!warning) continue;
+            const matchedArea = findAffectedArea(warning, lat, lon);
+            if (matchedArea) {
                 warnings.push({
                     event: warning.event,
                     severity: warning.severity,
@@ -40,7 +42,7 @@ exports.fetchWarnings = async (lat, lon) => {
                     description: warning.description,
                     onset: warning.onset,
                     expires: warning.expires,
-                    areaDesc: warning.areaDesc,
+                    areaDesc: matchedArea.areaDesc,
                 });
             }
         }
@@ -55,14 +57,21 @@ exports.fetchWarnings = async (lat, lon) => {
 function parseWarningXml(filePath) {
     return new Promise((resolve) => {
         const parser = new XmlParser();
-        const w = { polygons: [], excludePolygons: [] };
+        const w = { areas: [] };
         let currentTag = '';
+        let inArea = false;
+        let currentArea = null;
         let inGeocode = false;
         let geocodeValueName = '';
 
         parser.on('opentag', (name) => {
             currentTag = name;
-            if (name === 'geocode') inGeocode = true;
+            if (name === 'area') {
+                inArea = true;
+                currentArea = { areaDesc: '', polygons: [], excludePolygons: [] };
+            } else if (name === 'geocode') {
+                inGeocode = true;
+            }
         });
 
         parser.on('text', (text) => {
@@ -72,13 +81,13 @@ function parseWarningXml(filePath) {
             else if (currentTag === 'description') w.description = text;
             else if (currentTag === 'onset') w.onset = text;
             else if (currentTag === 'expires') w.expires = text;
-            else if (currentTag === 'areaDesc') w.areaDesc = text;
-            else if (currentTag === 'polygon') {
-                w.polygons.push(parsePolygon(text));
-            } else if (inGeocode && currentTag === 'valueName') {
+            else if (inArea && currentTag === 'areaDesc') currentArea.areaDesc = text;
+            else if (inArea && currentTag === 'polygon') {
+                currentArea.polygons.push(parsePolygon(text));
+            } else if (inArea && inGeocode && currentTag === 'valueName') {
                 geocodeValueName = text;
-            } else if (inGeocode && currentTag === 'value' && geocodeValueName === 'EXCLUDE_POLYGON') {
-                w.excludePolygons.push(parsePolygon(text));
+            } else if (inArea && inGeocode && currentTag === 'value' && geocodeValueName === 'EXCLUDE_POLYGON') {
+                currentArea.excludePolygons.push(parsePolygon(text));
             }
         });
 
@@ -86,6 +95,10 @@ function parseWarningXml(filePath) {
             if (name === 'geocode') {
                 inGeocode = false;
                 geocodeValueName = '';
+            } else if (name === 'area') {
+                inArea = false;
+                if (currentArea) w.areas.push(currentArea);
+                currentArea = null;
             }
         });
 
@@ -103,13 +116,14 @@ function parsePolygon(text) {
     }).filter(p => !isNaN(p.lat) && !isNaN(p.lon));
 }
 
-function isAffected(warning, lat, lon) {
-    // Punkt muss in mindestens einem Polygon liegen
-    const inside = warning.polygons.some(poly => pointInPolygon(lat, lon, poly));
-    if (!inside) return false;
-    // Punkt darf nicht in einem Exclude-Polygon liegen
-    const excluded = warning.excludePolygons.some(poly => pointInPolygon(lat, lon, poly));
-    return !excluded;
+function findAffectedArea(warning, lat, lon) {
+    for (const area of warning.areas) {
+        const inside = area.polygons.some(poly => pointInPolygon(lat, lon, poly));
+        if (!inside) continue;
+        const excluded = area.excludePolygons.some(poly => pointInPolygon(lat, lon, poly));
+        if (!excluded) return area;
+    }
+    return null;
 }
 
 // Ray-Casting Algorithmus
